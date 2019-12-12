@@ -41,6 +41,7 @@ public enum Token {
     TYPEDEF_KEYWORD("typedef"),
     STRUCT_KEYWORD("struct"),
     ENUM_KEYWORD("enum"),
+    LET_KEYWORD("let"),
     
     UPPER_IDENTIFIER("[A-Z][\\w_\\$]*"),
     LOWER_IDENTIFIER("[a-z][\\w_\\$]*"),

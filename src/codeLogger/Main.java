@@ -14,7 +14,7 @@ public class Main {
         Token t1 = Token.BIT_AND_OP;
         System.out.println(t1.endOfMatch("&"));
         
-        Scanner fileReader = new Scanner(new File("src/codeLogger/test.ms"));
+        Scanner fileReader = new Scanner(new File("src/codeLogger/test2.ms"));
         StringBuffer currentBuf= new StringBuffer();
         while(fileReader.hasNextLine()) {
             currentBuf.append(fileReader.nextLine()+"\n");
