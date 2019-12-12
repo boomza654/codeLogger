@@ -10,6 +10,10 @@ public class Main {
      * @param args args
      */
     public static void main(String[] args) throws Exception{
+        
+        Token t1 = Token.BIT_AND_OP;
+        System.out.println(t1.endOfMatch("&"));
+        
         Scanner fileReader = new Scanner(new File("src/codeLogger/test.ms"));
         StringBuffer currentBuf= new StringBuffer();
         while(fileReader.hasNextLine()) {
@@ -23,7 +27,7 @@ public class Main {
                     if(index!=-1) {
                         String token = currentBuf.substring(0, index);
                         if(t.toString().endsWith("KEYWORD")) token +="&";
-                        System.out.print("{"+token+"}");
+                        System.out.print("-->"+token+"<--");
                         currentBuf.delete(0,index);
                         found=true;
                         break;
@@ -34,6 +38,6 @@ public class Main {
         }
         fileReader.close();
         if(currentBuf.length()!=0)
-            System.out.print("{Unmatched:"+currentBuf+"}");
+            System.out.print("-->Unmatched:"+currentBuf+"<--");
     }
 }
