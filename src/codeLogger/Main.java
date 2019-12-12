@@ -22,7 +22,8 @@ public class Main {
                     int index = t.endOfMatch(currentBuf);
                     if(index!=-1) {
                         String token = currentBuf.substring(0, index);
-                        System.out.print(t.toString()+":"+token+", ");
+                        if(t.toString().endsWith("KEYWORD")) token +="&";
+                        System.out.print("{"+token+"}");
                         currentBuf.delete(0,index);
                         found=true;
                         break;
@@ -33,6 +34,6 @@ public class Main {
         }
         fileReader.close();
         if(currentBuf.length()!=0)
-            System.out.print("Unmatched:"+currentBuf);
+            System.out.print("{Unmatched:"+currentBuf+"}");
     }
 }
