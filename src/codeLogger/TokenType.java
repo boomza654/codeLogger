@@ -5,10 +5,11 @@ import java.util.regex.Pattern;
 
 /**
  * represent a recognizable token with its Regex
+ * This is pretty much almost all token used in Minispecs
  * @author boomza654
  *
  */
-public enum Token {
+public enum TokenType {
     // Please declare token from highest precedent to lowest
     WHITESPACE ("\\s+"),
     ONELINE_COMMENT ("//[^\\n]*\\n"),
@@ -90,7 +91,8 @@ public enum Token {
     EQ_OP("="),
     
     
-    QUESTIONMARK("\\?") // This can be interpret based on context
+    QUESTIONMARK("\\?"), // This can be interpret based on context
+    
     ;
     
     public final String regex;
@@ -98,7 +100,7 @@ public enum Token {
     /*
      * Construct enum with this regex
      */
-    Token(String regex){
+    TokenType(String regex){
         this.regex="^"+regex;        
         pattern = Pattern.compile(this.regex);
     }
