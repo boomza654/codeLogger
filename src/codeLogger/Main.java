@@ -24,8 +24,8 @@ public class Main {
         firstLine.removeIf((s)->Set.of(WHITESPACE,ONELINE_COMMENT,MULTILINE_COMMENT).contains(s.type));
         
         System.out.println(firstLine);
-        TokenGrammar grammar = tgConcat(tgAny(), tgToken(LEFT_PAREN_PUNC),tgToken(STRING_LITERAL),tgToken(RIGHT_PAREN_PUNC),tgToken(SEMICOLON_PUNC));
-        System.out.println(grammar.endOfMatch(firstLine, 0));
+        TokenGrammar t = tgConcat(tgNonTerminal("boom"),tgOr(tgToken(DOT_PUNC),tgToken(INPUT_KEYWORD)),tgStar(tgAny()));
+        System.out.println(t);
         
     }
 }
