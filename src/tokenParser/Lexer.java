@@ -1,4 +1,4 @@
-package codeLogger;
+package tokenParser;
 
 import java.io.*;
 import java.util.*;
@@ -19,7 +19,7 @@ public class Lexer {
      * @throws IOException
      */
     public static List<List<TokenizedWord>> tokenizeFileByLine(String uri) throws IOException{
-        try(Scanner fileReader = new Scanner(new File("src/codeLogger/test2.ms"));){
+        try(Scanner fileReader = new Scanner(new File(uri));){
             List<List<TokenizedWord>> out= new ArrayList<>();
             StringBuffer currentBuf= new StringBuffer();
             int row=1;

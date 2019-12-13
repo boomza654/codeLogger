@@ -1,6 +1,14 @@
 package codeLogger;
 
+import static tokenParser.TokenGrammar.*;
+import static tokenParser.TokenType.*;
 
+import java.util.*;
+
+import tokenParser.Lexer;
+import tokenParser.TokenGrammar;
+import tokenParser.TokenType;
+import tokenParser.TokenizedWord;
 
 
 public class Main {
@@ -10,9 +18,14 @@ public class Main {
      */
     public static void main(String[] args) throws Exception{
         
-        TokenType t1 = TokenType.BIT_AND_OP;
-        System.out.println(t1.endOfMatch("&"));
+        List<List<TokenizedWord>> words =Lexer.tokenizeFileByLine("src/tokenParser/testmini.ms"); 
+        System.out.println(words);
+        List<TokenizedWord> firstLine = new ArrayList<>(words.get(0));
+        firstLine.removeIf((s)->Set.of(WHITESPACE,ONELINE_COMMENT,MULTILINE_COMMENT).contains(s.type));
         
-        System.out.println(Lexer.tokenizeFileByLine("src/codeLogger/test2.ms"));
+        System.out.println(firstLine);
+        TokenGrammar grammar = tgConcat(tgAny(), tgToken(LEFT_PAREN_PUNC),tgToken(STRING_LITERAL),tgToken(RIGHT_PAREN_PUNC),tgToken(SEMICOLON_PUNC));
+        System.out.println(grammar.endOfMatch(firstLine, 0));
+        
     }
 }
