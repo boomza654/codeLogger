@@ -5,10 +5,7 @@ import static tokenParser.TokenType.*;
 
 import java.util.*;
 
-import tokenParser.Lexer;
-import tokenParser.TokenGrammar;
-import tokenParser.TokenType;
-import tokenParser.TokenizedWord;
+import tokenParser.*;
 
 
 public class Main {
@@ -26,6 +23,7 @@ public class Main {
         System.out.println(firstLine);
         TokenGrammar t = tgConcat(tgNonTerminal("boom"),tgOr(tgToken(DOT_PUNC),tgToken(INPUT_KEYWORD)),tgStar(tgAny()));
         System.out.println(t);
-        
+        TokenGrammarManager tm = new TokenGrammarManager();
+        System.out.println(tm);
     }
 }
