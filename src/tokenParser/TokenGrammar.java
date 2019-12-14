@@ -11,17 +11,17 @@ import java.util.*;
 public interface TokenGrammar{
     
 
-    public static TokenGrammar tgEmpty() { return new TGEmpty();}
-    public static TokenGrammar tgToken(TokenType t) { return new TGToken(t);} // will possibly be used only by Grammar manager
-    public static TokenGrammar tgSet(Set<TokenType> t) { return new TGTokenSet(t);} // will possibly be used only by Grammar manager
-    public static TokenGrammar tgNotSet(Set<TokenType> t) { return new TGNotTokenSet(t);}// will possibly be used only by Grammar manager
-    public static TokenGrammar tgAny() { return new TGNotTokenSet(Set.of());}
-    public static TokenGrammar tgNonTerminal(String t) {return new TGNonTerminal(t);}
-    public static TokenGrammar tgQM(TokenGrammar t) { return new TGOr(new TGEmpty(), t);}
-    public static TokenGrammar tgStar(TokenGrammar t) { return new TGRepeat(t);}
-    public static TokenGrammar tgPlus(TokenGrammar t) { return new TGConcat(t,tgStar(t));}
-    public static TokenGrammar tgOr(TokenGrammar ...t1) { return new TGOr(Arrays.asList(t1));}
-    public static TokenGrammar tgConcat(TokenGrammar ...t1) { return new TGConcat(Arrays.asList(t1));}
+    public static TokenGrammar empty() { return new TGEmpty();}
+    public static TokenGrammar token(TokenType t) { return new TGToken(t);} // will possibly be used only by Grammar manager
+    public static TokenGrammar tSet(Set<TokenType> t) { return new TGTokenSet(t);} // will possibly be used only by Grammar manager
+    public static TokenGrammar tNotSet(Set<TokenType> t) { return new TGNotTokenSet(t);}// will possibly be used only by Grammar manager
+    public static TokenGrammar any() { return new TGNotTokenSet(Set.of());}
+    public static TokenGrammar nonT(String t) {return new TGNonTerminal(t);}
+    public static TokenGrammar optional(TokenGrammar t) { return new TGOr(new TGEmpty(), t);}
+    public static TokenGrammar repeat(TokenGrammar t) { return new TGRepeat(t);}
+    public static TokenGrammar plus(TokenGrammar t) { return new TGConcat(t,repeat(t));}
+    public static TokenGrammar or(TokenGrammar ...t1) { return new TGOr(Arrays.asList(t1));}
+    public static TokenGrammar and(TokenGrammar ...t1) { return new TGConcat(Arrays.asList(t1));}
     @Override public boolean equals(Object obj);
     @Override public int hashCode();
     @Override public String toString();

@@ -21,9 +21,9 @@ public class Main {
         firstLine.removeIf((s)->Set.of(WHITESPACE,ONELINE_COMMENT,MULTILINE_COMMENT).contains(s.type));
         
         System.out.println(firstLine);
-        TokenGrammar t = tgConcat(tgNonTerminal("boom"),tgOr(tgToken(DOT_PUNC),tgToken(INPUT_KEYWORD)),tgStar(tgAny()));
+        TokenGrammar t = and(nonT("boom"),or(token(DOT_PUNC),token(INPUT_KEYWORD)),repeat(any()));
         System.out.println(t);
-        TokenGrammarManager tm = new TokenGrammarManager();
+        TokenProdRules tm = new TokenProdRules();
         System.out.println(tm);
     }
 }
