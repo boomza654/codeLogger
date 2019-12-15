@@ -1,0 +1,10 @@
+importStmt = $import_keyword , ( $comma_punc , identifier ) * , $semicolon_punc
+
+
+
+type = $upper_identifier , params ?
+params = $sharp_punc , $left_paren_punc , param , ( $comma_punc , param ) * , $right_paren_punc
+param = $int_literal | type 
+
+identifier = $Lower_identifier | $Upper_identifier
+any_identifier = $Lower_identifier | $Upper_identifier | $Dollar_identifier

@@ -1,7 +1,7 @@
 package tokenParser;
 
 import java.util.*;
-import static tokenParser.TokenGrammar.*;
+import static tokenParser.TokenProdExpr.*;
 
 import util.Pair;
 /**
@@ -24,7 +24,7 @@ import util.Pair;
  * precedence () >   [],[^]> postfix > , > |
  * 
  * Form of grammar
- * expression = expr | expr | ...
+ * nonterminal name = expr | expr | ...
  *            or expr , expr , epxr ,...
  *            or expr + or expr ? or expr *
  *            or ( expr )
@@ -33,7 +33,7 @@ import util.Pair;
  *            or non terminal name 
  *            or terminal name (start with $ then name)
  * 
- * Use spacebar to seaparate between all tokens (so that I dont have to make grammar lexers)
+ * Use *spacebar* to seaparate between all tokens (so that I dont have to make grammar lexers)
  * 
  * 
  */
@@ -41,9 +41,9 @@ public class GrammarReader {
     /**
      * 
      * @param expression an expression of Token Grammar (must be one line only with no line terminating char)
-     * @return Token grammar corresponds to that expression
+     * @return Pair of ( non terminal getting assigned,Token grammar corresponds to that expression)
      */
-    public static Pair<String,TokenGrammar> parse(String expression) {
+    public static Pair<String,TokenProdExpr> parse(String expression) {
         try(Scanner sc = new Scanner(expression);){
             List<String> grammarTokens = new ArrayList<>();
             while(sc.hasNext()) {
@@ -51,7 +51,7 @@ public class GrammarReader {
             }
             assert grammarTokens.get(1).equals("="): "no assignment happen";
             assert grammarTokens.get(0).matches("\\w+"):" not assigning non terminal ?!?!";
-            return new Pair<String, TokenGrammar>(grammarTokens.get(0),parseOr(grammarTokens,2, grammarTokens.size()));
+            return new Pair<String, TokenProdExpr>(grammarTokens.get(0).toLowerCase(),parseOr(grammarTokens,2, grammarTokens.size()));
         } 
     }
     
@@ -62,7 +62,7 @@ public class GrammarReader {
      * @param end index exclusive
      * @return Token grammar of the or-ed of  grammarTokens[start:end]
      */
-    static TokenGrammar parseOr(List<String> grammarTokens, int start, int end) {
+    static TokenProdExpr parseOr(List<String> grammarTokens, int start, int end) {
         //System.err.println(grammarTokens+" "+start+" "+end);
         if(start>=end) return empty();
         
@@ -93,7 +93,7 @@ public class GrammarReader {
         if(orIndexes.size()==0) return parseAnd(grammarTokens,start,end);
         orIndexes.add(end);
         
-        List<TokenGrammar> grammars = new ArrayList<>();
+        List<TokenProdExpr> grammars = new ArrayList<>();
         int startIndex=start;
         for(int endIndex:orIndexes) {
         
@@ -111,7 +111,7 @@ public class GrammarReader {
      * @param end index exclusive
      * @return Token grammar of the concat-ed of  grammarToken[start:end]
      */
-    static TokenGrammar parseAnd(List<String> grammarTokens, int start, int end) {
+    static TokenProdExpr parseAnd(List<String> grammarTokens, int start, int end) {
 
         //System.err.println(grammarTokens+" "+start+" "+end);
                 
@@ -144,7 +144,7 @@ public class GrammarReader {
         if(andIndexes.size()==0) return parsePost(grammarTokens,start,end);
         andIndexes.add(end);
         
-        List<TokenGrammar> grammars = new ArrayList<>();
+        List<TokenProdExpr> grammars = new ArrayList<>();
         int startIndex=start;
         for(int endIndex:andIndexes) {
             grammars.add(parsePost(grammarTokens,startIndex,endIndex));
@@ -161,7 +161,7 @@ public class GrammarReader {
      * @param end index exclusive 
      * @return Token grammar of the expression grammarToken[start:end]
      */
-    static TokenGrammar parsePost(List<String> grammarTokens, int start, int end) {
+    static TokenProdExpr parsePost(List<String> grammarTokens, int start, int end) {
 
         //System.err.println(grammarTokens+" "+start+" "+end);
         if(start>=end) return empty();
@@ -180,7 +180,7 @@ public class GrammarReader {
      * @param end index exclusive
      * @return Token grammar of the or-ed of entire expression
      */
-    static TokenGrammar parsePrimitive(List<String> grammarTokens, int start, int end) {
+    static TokenProdExpr parsePrimitive(List<String> grammarTokens, int start, int end) {
 
         //System.err.println(grammarTokens+" "+start+" "+end);
         if(start>=end) return empty();
