@@ -3,6 +3,7 @@ package tokenParser;
 import java.util.*;
 import static tokenParser.TokenGrammar.*;
 
+import util.Pair;
 /**
  * 
  * Class that read manual production expression and generate token Grammar
@@ -15,7 +16,7 @@ import static tokenParser.TokenGrammar.*;
  * - +,*,? (postfix)
  * - [ t1 t2 t3 ] (token class)
  * - [^ t1 t2 t3 ... ] (not token class)
- * - non terminal name (case insensitive + _ )
+ * - non terminal name (case insensitive + _+ 0-9 )
  * - terminal name (start with $ then name)
  * - ()
  * - empty expression can be inserted between | or , or before postfix operator
@@ -27,7 +28,10 @@ import static tokenParser.TokenGrammar.*;
  *            or expr , expr , epxr ,...
  *            or expr + or expr ? or expr *
  *            or ( expr )
- *            or  * - [ t1 t2 t3 ] (token class) or [^ t1 t2 t3 ... ] (not token class) or non terminal name or terminal name (start with $ then name)
+ *            or [ t1 t2 t3 ] (token class) 
+ *            or [^ t1 t2 t3 ... ] (not token class) 
+ *            or non terminal name 
+ *            or terminal name (start with $ then name)
  * 
  * Use spacebar to seaparate between all tokens (so that I dont have to make grammar lexers)
  * 
@@ -39,13 +43,15 @@ public class GrammarReader {
      * @param expression an expression of Token Grammar (must be one line only with no line terminating char)
      * @return Token grammar corresponds to that expression
      */
-    public static TokenGrammar parse(String expression) {
+    public static Pair<String,TokenGrammar> parse(String expression) {
         try(Scanner sc = new Scanner(expression);){
             List<String> grammarTokens = new ArrayList<>();
             while(sc.hasNext()) {
                 grammarTokens.add(sc.next());
             }
-            return parseOr(grammarTokens,0, grammarTokens.size());
+            assert grammarTokens.get(1).equals("="): "no assignment happen";
+            assert grammarTokens.get(0).matches("\\w+"):" not assigning non terminal ?!?!";
+            return new Pair<String, TokenGrammar>(grammarTokens.get(0),parseOr(grammarTokens,2, grammarTokens.size()));
         } 
     }
     
@@ -57,7 +63,7 @@ public class GrammarReader {
      * @return Token grammar of the or-ed of  grammarTokens[start:end]
      */
     static TokenGrammar parseOr(List<String> grammarTokens, int start, int end) {
-        System.err.println(grammarTokens+" "+start+" "+end);
+        //System.err.println(grammarTokens+" "+start+" "+end);
         if(start>=end) return empty();
         
         int nestedLevel=0; 
@@ -107,7 +113,7 @@ public class GrammarReader {
      */
     static TokenGrammar parseAnd(List<String> grammarTokens, int start, int end) {
 
-        System.err.println(grammarTokens+" "+start+" "+end);
+        //System.err.println(grammarTokens+" "+start+" "+end);
                 
         if(start>=end) return empty();
         
@@ -157,7 +163,7 @@ public class GrammarReader {
      */
     static TokenGrammar parsePost(List<String> grammarTokens, int start, int end) {
 
-        System.err.println(grammarTokens+" "+start+" "+end);
+        //System.err.println(grammarTokens+" "+start+" "+end);
         if(start>=end) return empty();
         switch(grammarTokens.get(end-1)) {
             case "+": return plus(parsePrimitive(grammarTokens,start,end-1));
@@ -176,7 +182,7 @@ public class GrammarReader {
      */
     static TokenGrammar parsePrimitive(List<String> grammarTokens, int start, int end) {
 
-        System.err.println(grammarTokens+" "+start+" "+end);
+        //System.err.println(grammarTokens+" "+start+" "+end);
         if(start>=end) return empty();
         if(start==end-1) {
             String currentLiteral = grammarTokens.get(start);
@@ -185,7 +191,7 @@ public class GrammarReader {
                 return token(TokenType.valueOf(currentLiteral.substring(1).toUpperCase()));
             }
             assert currentLiteral.matches("\\w+"):"Non identifier?!?!?";
-            return nonT(currentLiteral);
+            return nonT(currentLiteral.toLowerCase());
         }
         else if(grammarTokens.get(start).equals("(")) {
             assert grammarTokens.get(end-1).equals(")"): " non matching )";

@@ -24,8 +24,7 @@ public class Main {
         TokenGrammar t = and(nonT("boom"),or(token(DOT_PUNC),token(INPUT_KEYWORD)),repeat(any()));
         TokenProdRules tm = new TokenProdRules();
         System.out.println(tm);
-        System.out.println(GrammarReader.parse(" boom , ( $DOT_PUNC | input_keyword ) , . *"));
+        System.out.println(GrammarReader.parse("kuay = boom , ( $DOT_punc | $inpuT_keyword ) , . *"));
 
-        System.out.println(t);
     }
 }

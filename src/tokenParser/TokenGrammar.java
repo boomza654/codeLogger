@@ -39,7 +39,7 @@ class TGToken implements TokenGrammar{
     TokenType getToken() { return type;}
    
     @Override public String toString() {
-        return "Token [" + type + "]";
+        return "$" + type.name();
     }
     @Override public int hashCode() {
         final int prime = 31;
@@ -66,7 +66,7 @@ class TGTokenSet implements TokenGrammar{
     TGTokenSet(Set<TokenType> t){ types= Set.copyOf(t);}
     Set<TokenType> getTokenSet(){ return Set.copyOf(types);}
     @Override public String toString() {
-        return "TokenSet " + types ;
+        return "[ " + types.stream().map((s)->"$"+s.name()).reduce("", (a,b)->a+" "+b) +" ]";
     }
     @Override public int hashCode() {
         final int prime = 31;
@@ -147,7 +147,7 @@ class TGNotTokenSet implements TokenGrammar{
         return true;
     }
     @Override public String toString() {
-        return "NotTokenSet !" + types + "";
+        return "[^ " + types.stream().map((s)->"$"+s.name()).reduce("", (a,b)->a+" "+b) +" ]";
     }
 }
 class TGConcat implements TokenGrammar{
@@ -180,7 +180,7 @@ class TGConcat implements TokenGrammar{
     @Override public String toString() {
         List<String> stringExpr =new ArrayList<>();
         exprs.forEach((s)-> stringExpr.add(s.toString()));
-        return "(" + String.join(" ", stringExpr) + ")";
+        return "( " + String.join(" , ", stringExpr) + " )";
     }
 }
 class TGOr implements TokenGrammar{
@@ -212,7 +212,7 @@ class TGOr implements TokenGrammar{
     @Override public String toString() {
         List<String> stringExpr =new ArrayList<>();
         exprs.forEach((s)-> stringExpr.add(s.toString()));
-        return "(" + String.join(" | ", stringExpr) + ")";
+        return "( " + String.join(" | ", stringExpr) + " )";
     }
 }
 
@@ -242,6 +242,6 @@ class TGRepeat implements TokenGrammar{
         return true;
     }
     @Override public String toString() {
-        return "(" + expr + ")*";
+        return "( " + expr + " ) *";
     }
 }
