@@ -180,6 +180,7 @@ public class GrammarReader {
         if(start>=end) return empty();
         if(start==end-1) {
             String currentLiteral = grammarTokens.get(start);
+            if(currentLiteral.equals(".")) return any();
             if(currentLiteral.startsWith("$")) {
                 return token(TokenType.valueOf(currentLiteral.substring(1).toUpperCase()));
             }

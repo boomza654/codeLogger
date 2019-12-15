@@ -22,9 +22,10 @@ public class Main {
         
         System.out.println(firstLine);
         TokenGrammar t = and(nonT("boom"),or(token(DOT_PUNC),token(INPUT_KEYWORD)),repeat(any()));
-        System.out.println(t);
         TokenProdRules tm = new TokenProdRules();
         System.out.println(tm);
-        System.out.println(GrammarReader.parse(" ( meme , kuay | nani + , [^ $whitespace ] )"));
+        System.out.println(GrammarReader.parse(" boom , ( $DOT_PUNC | input_keyword ) , . *"));
+
+        System.out.println(t);
     }
 }
