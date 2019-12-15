@@ -25,5 +25,6 @@ public class Main {
         System.out.println(t);
         TokenProdRules tm = new TokenProdRules();
         System.out.println(tm);
+        System.out.println(GrammarReader.parse(" ( meme , kuay | nani + , [^ $whitespace ] )"));
     }
 }

@@ -1,7 +1,6 @@
 package tokenParser;
 
 import java.util.*;
-import static tokenParser.TokenType.*;
 import static tokenParser.TokenGrammar.*;
 /**
  * a Regex Matcher for Token
@@ -44,7 +43,7 @@ public class TokenProdRules {
      * @param uri of a file that contains grammar
      * @return Token Grammar Manager that contains all grammar from File
      */
-    public static TokenProdRules readFromFile(String uri) {
+    public static TokenProdRules compileFromFile(String uri) {
         throw new RuntimeException("Not Implemented");
     }
 
