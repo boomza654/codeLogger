@@ -3,6 +3,19 @@ package tokenParser;
 import java.util.*;
 
 /**
+ * Enum representing Possible Class type of current Prod Expr
+ */
+enum TokenProdExprType{
+    EMPTY,
+    TOKEN,
+    TOKEN_SET,
+    NOT_TOKEN_SET,
+    NON_TERMINAL,
+    CONCAT,
+    OR,
+    REPEAT
+}
+/**
  * Immutable
  * Token grammar Interface
  * @author boomza654
@@ -61,6 +74,8 @@ public interface TokenProdExpr{
     @Override
     public String toString();
 
+    public TokenProdExprType getType();
+
 }
 
 class TGEmpty implements TokenProdExpr {
@@ -77,6 +92,11 @@ class TGEmpty implements TokenProdExpr {
     @Override
     public int hashCode() {
         return 31;
+    }
+
+    @Override
+    public TokenProdExprType getType() {
+        return TokenProdExprType.EMPTY;
     }
 }
 
@@ -117,7 +137,10 @@ class TGToken implements TokenProdExpr {
             return false;
         return true;
     }
-
+    @Override
+    public TokenProdExprType getType() {
+        return TokenProdExprType.TOKEN;
+    }
 }
 
 class TGTokenSet implements TokenProdExpr {
@@ -160,7 +183,10 @@ class TGTokenSet implements TokenProdExpr {
             return false;
         return true;
     }
-
+    @Override
+    public TokenProdExprType getType() {
+        return TokenProdExprType.TOKEN_SET;
+    }
 }
 
 class TGNonTerminal implements TokenProdExpr {
@@ -203,6 +229,10 @@ class TGNonTerminal implements TokenProdExpr {
             return false;
         return true;
     }
+    @Override
+    public TokenProdExprType getType() {
+        return TokenProdExprType.NON_TERMINAL;
+    }
 }
 
 class TGNotTokenSet implements TokenProdExpr {
@@ -244,6 +274,10 @@ class TGNotTokenSet implements TokenProdExpr {
     @Override
     public String toString() {
         return "[^ " + types.stream().map((s) -> "$" + s.name()).reduce("", (a, b) -> a + " " + b) + " ]";
+    }
+    @Override
+    public TokenProdExprType getType() {
+        return TokenProdExprType.NOT_TOKEN_SET;
     }
 }
 
@@ -293,6 +327,10 @@ class TGConcat implements TokenProdExpr {
         exprs.forEach((s) -> stringExpr.add(s.toString()));
         return "( " + String.join(" , ", stringExpr) + " )";
     }
+    @Override
+    public TokenProdExprType getType() {
+        return TokenProdExprType.CONCAT;
+    }
 }
 
 class TGOr implements TokenProdExpr {
@@ -341,6 +379,10 @@ class TGOr implements TokenProdExpr {
         exprs.forEach((s) -> stringExpr.add(s.toString()));
         return "( " + String.join(" | ", stringExpr) + " )";
     }
+    @Override
+    public TokenProdExprType getType() {
+        return TokenProdExprType.OR;
+    }
 }
 
 class TGRepeat implements TokenProdExpr {
@@ -380,5 +422,9 @@ class TGRepeat implements TokenProdExpr {
     }
     @Override public String toString() {
         return  expr + " *";
+    }
+    @Override
+    public TokenProdExprType getType() {
+        return TokenProdExprType.REPEAT;
     }
 }
