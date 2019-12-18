@@ -19,18 +19,22 @@ public class TokenizedWord {
      * @param row int
      * @param column int
      */
-    public TokenizedWord(TokenType type, String content, int row, int column) {
-        this.type=type;
-        this.content=content;
-        this.row=row;
-        this.column=column;
+    public TokenizedWord(final TokenType type, final String content, final int row, final int column) {
+        this.type = type;
+        this.content = content;
+        this.row = row;
+        this.column = column;
     }
-    @Override public String toString() {
-        return "("+type+" "+content+" @ "+row+","+column+")";
+
+    @Override
+    public String toString() {
+        return "(" + type + " " + content + " @ " + row + "," + column + ")";
     }
-    @Override public boolean equals(Object obj) {
-        if(obj instanceof TokenizedWord) {
-            TokenizedWord o=(TokenizedWord) obj;
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj instanceof TokenizedWord) {
+            final TokenizedWord o = (TokenizedWord) obj;
             return o.type.equals(type) && o.content.equals(content) && o.row==row && o.column==column;
         }
         return false;

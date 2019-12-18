@@ -100,8 +100,8 @@ public enum TokenType {
     /*
      * Construct enum with this regex
      */
-    TokenType(String regex){
-        this.regex="^"+regex;        
+    TokenType(final String regex) {
+        this.regex = "^" + regex;
         pattern = Pattern.compile(this.regex);
     }
 
@@ -110,8 +110,8 @@ public enum TokenType {
      * @param input charsequence to match
      * @return -1 if not match else index of the end of Match
      */
-    int endOfMatch(CharSequence input) {
-        Matcher m = pattern.matcher(input);
+    int endOfMatch(final CharSequence input) {
+        final Matcher m = pattern.matcher(input);
         
         return m.find()?m.end():-1;
     }

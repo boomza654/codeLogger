@@ -13,16 +13,20 @@ public class Pair<A,B> {
     public final A first;
     public final B second;
     
-    public Pair(A a, B b) {
+    public Pair(final A a, final B b) {
         first = a;
-        second =b;
+        second = b;
     }
-    @Override public String toString() {
-        return "Pair < "+first+" , "+second+" >";
+
+    @Override
+    public String toString() {
+        return "Pair < " + first + " , " + second + " >";
     }
-    @Override public boolean equals(Object obj) {
-        if(obj instanceof Pair<?,?>) {
-            Pair<?,?> that = (Pair<?,?>)obj;
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj instanceof Pair<?, ?>) {
+            final Pair<?, ?> that = (Pair<?, ?>) obj;
             return that.first.equals(first) && that.second.equals(second);
         }
         return false;
