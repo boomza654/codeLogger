@@ -10,7 +10,7 @@ import java.util.*;
  */
 public class ParseTree{
     public final String text;
-    public final List<ParseTree> children;
+    public final List<ParseTree> children; // will be unmodifiable list
     public final String nonTerminalName; // will have $ infront if it is terminal
     public final int start;
     public final int end;
@@ -23,34 +23,37 @@ public class ParseTree{
      * @param start start index in the list
      * @param end end index (exclusive) in the list
      */
-    public ParseTree(String text, List<ParseTree> children, String nonTerminalName, int start,int end) {
-        this.text=text;
-        this.children=List.copyOf(children);
-        this.nonTerminalName=nonTerminalName;
-        this.start=start;
-        this.end=end;
+    public ParseTree(final String text, final List<ParseTree> children, final String nonTerminalName, final int start,
+            final int end) {
+        this.text = text;
+        this.children = List.copyOf(children);
+        this.nonTerminalName = nonTerminalName;
+        this.start = start;
+        this.end = end;
     }
-    
-    @Override public boolean equals(Object obj) {
-        if(obj instanceof ParseTree) {
-            ParseTree that = (ParseTree) obj;
-            return that.text.equals(text) 
-                    && that.children.equals(children) 
-                    && that.nonTerminalName.equals(nonTerminalName) 
-                    && that.start==start && that.end==end;
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj instanceof ParseTree) {
+            final ParseTree that = (ParseTree) obj;
+            return that.text.equals(text) && that.children.equals(children)
+                    && that.nonTerminalName.equals(nonTerminalName) && that.start == start && that.end == end;
         }
         return false;
     }
-    @Override public int hashCode() {
-        return children.hashCode()+nonTerminalName.hashCode()+text.hashCode()+start+end;
-    }
-    private List<String> toListString(){
 
-        String curText = "-"+nonTerminalName+": "+text+" @ "+start+","+end;
-        List<String> out = new ArrayList<>();
+    @Override
+    public int hashCode() {
+        return children.hashCode() + nonTerminalName.hashCode() + text.hashCode() + start + end;
+    }
+
+    private List<String> toListString() {
+
+        final String curText = "-" + nonTerminalName + ": " + text + " @ " + start + "," + end;
+        final List<String> out = new ArrayList<>();
         out.add(curText);
-        for(ParseTree t:children) {
-            List<String> childrenText = t.toListString();
+        for (final ParseTree t : children) {
+            final List<String> childrenText = t.toListString();
             childrenText.stream().forEach((s)-> out.add("    "+s));
         }
         return out;

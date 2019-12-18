@@ -71,7 +71,7 @@ public class TokenGrammar {
 
     /**
      * 
-     * @param uri of a file that contains grammar
+     * @param uri of a file that contains grammar (line by line)
      * @return Token Grammar Manager that contains all grammar from File
      * @throws FileNotFoundException if the file of such uri is not found
      */
