@@ -90,7 +90,7 @@ public class GrammarMatcher {
                         final int endPos=result.first.intValue();
                         String curContent="";
                         for(ParseTree children: result.second){
-                            curContent+= children.text+" ";
+                            curContent+= children.text;
                         }
                         final ParseTree p=new ParseTree(curContent, result.second, curExpr.getName(), pos, endPos); 
                         return new Pair<Integer,List<ParseTree>>(endPos, List.of(p));

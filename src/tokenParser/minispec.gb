@@ -9,4 +9,4 @@ param = $int_literal | type
 identifier = $Lower_identifier | $Upper_identifier
 any_identifier = $Lower_identifier | $Upper_identifier | $Dollar_identifier
 
-test = $Dollar_identifier , $left_paren_punc , $String_literal , $right_paren_punc , $semicolon_punc
+test = type

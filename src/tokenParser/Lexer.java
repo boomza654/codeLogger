@@ -16,7 +16,7 @@ public class Lexer {
      * Read from file line by line until EOF and tokenize each line (transform all line break to \n)
      * @param uri
      * @return List of list of tokenized word out[i][j] = j+1th token of the i+1th line
-     * @throws IOException
+     * @throws IOException if cant open file
      */
     public static List<List<TokenizedWord>> tokenizeFileByLine(final String uri) throws IOException {
         try (Scanner fileReader = new Scanner(new File(uri));) {
