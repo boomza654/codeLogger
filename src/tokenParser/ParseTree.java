@@ -49,7 +49,7 @@ public class ParseTree{
 
     private List<String> toListString() {
 
-        final String curText = "-" + nonTerminalName + ": " + text + " @ " + start + "," + end;
+        final String curText = "-" + text + ": " + nonTerminalName + " @[" + start + "," + end+")";
         final List<String> out = new ArrayList<>();
         out.add(curText);
         for (final ParseTree t : children) {
