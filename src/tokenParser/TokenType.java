@@ -40,6 +40,7 @@ public enum TokenType {
     ELSE_KEYWORD("else"),
 
     TYPEDEF_KEYWORD("typedef"),
+    TYPE_KEYWORD("type"),
     STRUCT_KEYWORD("struct"),
     ENUM_KEYWORD("enum"),
     LET_KEYWORD("let"),

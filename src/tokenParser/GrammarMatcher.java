@@ -23,10 +23,11 @@ public class GrammarMatcher {
      */
     public static ParseTree parse(final List<TokenizedWord> words, final Map<String,TokenProdExpr> prodMap, final String startNonterminal) throws UnableToParseException {
         ParserTraverser parser = new ParserTraverser(words, prodMap);
+        words.removeIf((s)->Set.of(TokenType.WHITESPACE, TokenType.ONELINE_COMMENT, TokenType.MULTILINE_COMMENT).contains(s.type));
         Pair<Integer,List<ParseTree>> result = parser.parseAndMove(TokenProdExpr.nonT(startNonterminal), 0);
         Pair<Integer,List<ParseTree>> resultEnd = parser.parseAndMove(TokenProdExpr.empty(), result.first); // get rid of trailing white space
         if(resultEnd.first != words.size()){
-            throw new UnableToParseException("Under parse Unmatched: "+ words.subList(resultEnd.first, words.size()));
+            System.err.println("Under parse Unmatched: "+ words.subList(resultEnd.first, words.size()));
         }
         assert result.second.size()==1: " return non 1 children";
         return result.second.get(0);
@@ -51,20 +52,15 @@ public class GrammarMatcher {
         /**
          * Try match list of tokenized wrods from current Pos to the given expression
          * @param expr Token Production expression to parse (should be a part of non terminal with curr Non terminal)
-         * @param startPos the starting position in the list that we try to match
+         * @param pos the starting position in the list that we try to match
          * @return Pair of end of match index and the List of related nonterminal / terminal 's
          *      ParseTree of the matching 
          *      the returned tree can be empty list if matched against empty expression
          * @throws UnableToParseException if Such expr cannot be matched
          */
-        public Pair<Integer,List<ParseTree>> parseAndMove(final TokenProdExpr expr, final int startPos) throws UnableToParseException{
+        public Pair<Integer,List<ParseTree>> parseAndMove(final TokenProdExpr expr, final int pos) throws UnableToParseException{
             assert expr!=null: "expr is null ?!?!?!?";
-            int pos=startPos-1; // the position to actually start parsing
-            TokenizedWord t;
-            do{
-                pos++;
-                t= (pos>=words.size() || pos<0) ?null:words.get(pos);
-            } while(t!=null && Set.of(TokenType.WHITESPACE, TokenType.ONELINE_COMMENT, TokenType.MULTILINE_COMMENT).contains(t.type));
+            TokenizedWord t= (pos>=words.size() || pos<0) ?null:words.get(pos);
             switch(expr.getType()){
                 case EMPTY:  return new Pair<Integer,List<ParseTree>>(pos,List.of()); 
                 case TOKEN: {
@@ -94,10 +90,10 @@ public class GrammarMatcher {
                     if(t!=null && prodMap.containsKey(curExpr.getName())){
                         final Pair<Integer,List<ParseTree>> result = parseAndMove(prodMap.get(curExpr.getName()), pos); // if this cant match Unable to Parse Excetion will auomatically thrown
                         final int endPos=result.first.intValue();
-                        String curContent="";
-                        for(ParseTree children: result.second){
-                            curContent+= children.text;
-                        }
+                        List<String> contentList = new ArrayList<>();
+                        result.second.forEach((s)->contentList.add(s.text));
+                        String curContent=String.join(" ", contentList);
+                        
                         final ParseTree p=new ParseTree(curContent, result.second, curExpr.getName(), pos, endPos); 
                         return new Pair<Integer,List<ParseTree>>(endPos, List.of(p));
                     } else{ throw new UnableToParseException("Cannot match "+ curExpr + " element @ "+pos); }

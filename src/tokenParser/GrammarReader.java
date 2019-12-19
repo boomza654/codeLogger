@@ -191,11 +191,11 @@ public class GrammarReader {
             return empty();
         switch (grammarTokens.get(end - 1)) {
         case "+":
-            return plus(parsePrimitive(grammarTokens, start, end - 1));
+            return plus(parsePost(grammarTokens, start, end - 1));
         case "?":
-            return optional(parsePrimitive(grammarTokens, start, end - 1));
+            return optional(parsePost(grammarTokens, start, end - 1));
         case "*":
-            return repeat(parsePrimitive(grammarTokens, start, end - 1));
+            return repeat(parsePost(grammarTokens, start, end - 1));
         default:
             return parsePrimitive(grammarTokens, start, end);
         }

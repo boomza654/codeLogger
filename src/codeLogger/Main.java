@@ -1,7 +1,7 @@
 package codeLogger;
 
 //import static tokenParser.TokenProdExpr.*;
-import static tokenParser.TokenType.*;
+//import static tokenParser.TokenType.*;
 
 import java.util.*;
 
@@ -15,11 +15,13 @@ public class Main {
      */
     public static void main(final String[] args) throws Exception {
 
-        final List<List<TokenizedWord>> words = Lexer.tokenizeFileByLine("src/tokenParser/test2.ms").subList(0, 3);
+        final List<List<TokenizedWord>> words = Lexer.tokenizeFileByLine("src/tokenParser/test2.ms");
 
         final List<TokenizedWord> firstLine = new ArrayList<>(words.get(0));
         firstLine.addAll(words.get(1));
-        firstLine.addAll(words.get(2));
+        firstLine.addAll(words.get(2));        
+        firstLine.addAll(words.get(3)); 
+        firstLine.addAll(words.get(4));
 
 
         System.out.println(firstLine);

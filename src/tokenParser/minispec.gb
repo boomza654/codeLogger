@@ -24,17 +24,34 @@ identifier = $Lower_identifier | $Upper_identifier
 any_identifier = $Lower_identifier | $Upper_identifier | $Dollar_identifier
 
 
+//args for function declaring
+arg = expression
+args = $left_paren_punc , ( arg , ( $comma_punc , arg ) * ) ? , $right_paren_punc
+argFormal = type , $Lower_identifier
+argFormals = $left_paren_punc , ( argFormal , ( $comma_punc , argFormal ) * ) ? , $right_paren_punc
 
-
-
+// Types format
 type = $upper_identifier , params ?
-params = $sharp_punc , $left_paren_punc , param , ( $comma_punc , param ) * , $right_paren_punc
-param = $int_literal | type 
+
+// param for inputting to type delaration
+params = $sharp_punc , $left_paren_punc , ( param , ( $comma_punc , param ) * ) ? , $right_paren_punc
+param = expression | type 
+paramFormals = $sharp_punc , $left_paren_punc , ( paramFormal , ( $comma_punc , paramFormal ) * ) ? , $right_paren_punc
+paramFormal = type , $Lower_identifier | $type_keyword , $Upper_identifier | param
+
+
+//The rest
+the_rest = . // basically all other things outside module
+// including typeDefs, funcitondefs, and Global Varaibledef
 
 // Imports 
 importDecl = $import_keyword , identifier , ( $comma_punc , identifier ) * , $semicolon_punc
 bsvImportDecl = $bsvimport_keyword , $upper_identifier , ( $comma_punc , $upper_identifier ) * , $semicolon_punc
 
-packageStmt = importDecl | bsvImportDecl // | typeDecl | varDecl | functionDef | moduleDef 
+//module
+moduleDef = $module_keyword , moduleId , argFormals ? , $semicolon_punc , moduleStmt * , $endmodule_keyword
+moduleId = $Upper_identifier , paramFormals ? 
+
+packageStmt = importDecl | bsvImportDecl | moduleDef | the_rest
 packageDef = packageStmt * // The outer most level
 start = packageDef
