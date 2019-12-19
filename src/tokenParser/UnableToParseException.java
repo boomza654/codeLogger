@@ -5,7 +5,7 @@ package tokenParser;
  * Class for representing an exception about parser error
  * @author boomza654
  */
-public class UnableToParseException extends RuntimeException{
+public class UnableToParseException extends Exception{
    
 
     /**
@@ -15,5 +15,8 @@ public class UnableToParseException extends RuntimeException{
 
     public UnableToParseException(final String s) {
         super(s);
+    }
+    public UnableToParseException(final String s,Exception e){
+        super(s, e);
     }
 }

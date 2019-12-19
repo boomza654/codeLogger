@@ -27,6 +27,7 @@ public class Main {
         final ParseTree p2 = new ParseTree("moob", List.of(), "@test", 5, 10);
         final ParseTree pp = new ParseTree("boommoob", List.of(p, p2), "combine", 0, 10);
         System.out.println(pp);
+        System.out.println(tm.parse(firstLine, "test"));
 
     }
 }

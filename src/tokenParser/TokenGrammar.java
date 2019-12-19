@@ -62,13 +62,22 @@ public class TokenGrammar {
      * @return Token Grammar for such non terminal or null if not found
      */
     public TokenProdExpr getProdRule(final String k) {
-        return prodMap.containsKey(k) ? prodMap.get(k) : null;
+        return prodMap.containsKey(k.toLowerCase()) ? prodMap.get(k.toLowerCase()) : null;
     }
 
     public Map<String, TokenProdExpr> getGrammarMap() {
         return new HashMap<>(prodMap);
     }
-
+    /**
+     * Parse the List of Tokenized words starting at some nonterminal using current content of Token Grammar
+     * @param words List of tokenized Words to parse
+     * @param startNonterminal the string of the name of non terminal to start
+     * @return ParseTree of parsing
+     * @throws UnableToParseException if the parsing is unsuccessful
+     */
+    public ParseTree parse(List<TokenizedWord> words, String startNonterminal) throws UnableToParseException{
+        return GrammarMatcher.parse(words, this.prodMap, startNonterminal.toLowerCase());
+    }
     /**
      * 
      * @param uri of a file that contains grammar (line by line)

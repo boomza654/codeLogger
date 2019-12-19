@@ -392,7 +392,7 @@ class TGRepeat implements TokenProdExpr {
         expr = t;
     }
 
-    TokenProdExpr getExprList() {
+    TokenProdExpr getExpr() {
         return expr;
     }
 
