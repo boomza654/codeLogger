@@ -24,8 +24,9 @@ public class GrammarMatcher {
     public static ParseTree parse(final List<TokenizedWord> words, final Map<String,TokenProdExpr> prodMap, final String startNonterminal) throws UnableToParseException {
         ParserTraverser parser = new ParserTraverser(words, prodMap);
         Pair<Integer,List<ParseTree>> result = parser.parseAndMove(TokenProdExpr.nonT(startNonterminal), 0);
-        if(result.first != words.size()){
-            throw new UnableToParseException("Under parse");
+        Pair<Integer,List<ParseTree>> resultEnd = parser.parseAndMove(TokenProdExpr.empty(), result.first); // get rid of trailing white space
+        if(resultEnd.first != words.size()){
+            throw new UnableToParseException("Under parse Unmatched: "+ words.subList(resultEnd.first, words.size()));
         }
         assert result.second.size()==1: " return non 1 children";
         return result.second.get(0);
@@ -50,15 +51,20 @@ public class GrammarMatcher {
         /**
          * Try match list of tokenized wrods from current Pos to the given expression
          * @param expr Token Production expression to parse (should be a part of non terminal with curr Non terminal)
-         * @param pos the starting position in the list that we try to match
+         * @param startPos the starting position in the list that we try to match
          * @return Pair of end of match index and the List of related nonterminal / terminal 's
          *      ParseTree of the matching 
          *      the returned tree can be empty list if matched against empty expression
          * @throws UnableToParseException if Such expr cannot be matched
          */
-        public Pair<Integer,List<ParseTree>> parseAndMove(final TokenProdExpr expr, final int pos) throws UnableToParseException{
+        public Pair<Integer,List<ParseTree>> parseAndMove(final TokenProdExpr expr, final int startPos) throws UnableToParseException{
             assert expr!=null: "expr is null ?!?!?!?";
-            final TokenizedWord t = (pos>=words.size() || pos<0) ?null:words.get(pos);
+            int pos=startPos-1; // the position to actually start parsing
+            TokenizedWord t;
+            do{
+                pos++;
+                t= (pos>=words.size() || pos<0) ?null:words.get(pos);
+            } while(t!=null && Set.of(TokenType.WHITESPACE, TokenType.ONELINE_COMMENT, TokenType.MULTILINE_COMMENT).contains(t.type));
             switch(expr.getType()){
                 case EMPTY:  return new Pair<Integer,List<ParseTree>>(pos,List.of()); 
                 case TOKEN: {

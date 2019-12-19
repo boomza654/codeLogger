@@ -1,4 +1,29 @@
-importStmt = $import_keyword , ( $comma_punc , identifier ) * , $semicolon_punc
+// Use grammar from minispec src
+// Original Author: Daniel Sanchez
+// Translater: Krittamate Tiankanon
+
+// Syntax for grammar file ( used by boomza's greedy parsergen)
+// // stands for  one line comment
+// all word  or operators separated by spacebar (too lazy to make parser generator)
+// $case_insensitive_Name is token type
+// name_case inssensitive is non terminal
+// , is concatenation operation e , f try to match e then f
+// | is alternative operation e | f try to match e and if it fails, try match f
+// * is repetition operation  e * try to match e >=0 time until it fails to match
+// ? is optional operation  e ? try to match e exactly 1 time if fail, just ignore the terminal
+// + is repetition operation >=1 e + is equivalent to e , e *
+// Can also use () for grouping but still need spacebar between ( and the rest and )
+// Assigning non terminal use this Syntax
+// name = Production_rule
+// Order of operation: () >> +*? >> , >> |
+
+
+// lower Case identifier + upper + dollar are part of token
+
+identifier = $Lower_identifier | $Upper_identifier
+any_identifier = $Lower_identifier | $Upper_identifier | $Dollar_identifier
+
+
 
 
 
@@ -6,7 +31,10 @@ type = $upper_identifier , params ?
 params = $sharp_punc , $left_paren_punc , param , ( $comma_punc , param ) * , $right_paren_punc
 param = $int_literal | type 
 
-identifier = $Lower_identifier | $Upper_identifier
-any_identifier = $Lower_identifier | $Upper_identifier | $Dollar_identifier
+// Imports 
+importDecl = $import_keyword , identifier , ( $comma_punc , identifier ) * , $semicolon_punc
+bsvImportDecl = $bsvimport_keyword , $upper_identifier , ( $comma_punc , $upper_identifier ) * , $semicolon_punc
 
-test = type
+packageStmt = importDecl | bsvImportDecl // | typeDecl | varDecl | functionDef | moduleDef 
+packageDef = packageStmt * // The outer most level
+start = packageDef

@@ -81,6 +81,7 @@ public class TokenGrammar {
     /**
      * 
      * @param uri of a file that contains grammar (line by line)
+     *          Allow // for 1 line comment
      * @return Token Grammar Manager that contains all grammar from File
      * @throws FileNotFoundException if the file of such uri is not found
      */
@@ -89,8 +90,12 @@ public class TokenGrammar {
         try (Scanner sc = new Scanner(new File(uri));) {
             while (sc.hasNextLine()) {
                 final String s = sc.nextLine();
-                if (!s.isBlank()) {
-                    final Pair<String, TokenProdExpr> pair = GrammarReader.parse(s);
+                final int commentIndex = s.indexOf("//");
+                String toParse=s;
+                if(commentIndex!=-1) toParse=s.substring(0,commentIndex);
+                // Get rid of comment section
+                if (!toParse.isBlank()) {
+                    final Pair<String, TokenProdExpr> pair = GrammarReader.parse(toParse);
                     g.setProdRule(pair.first, pair.second);
                 }
             }

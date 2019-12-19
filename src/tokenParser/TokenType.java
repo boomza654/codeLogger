@@ -45,15 +45,15 @@ public enum TokenType {
     LET_KEYWORD("let"),
     
     UPPER_IDENTIFIER("[A-Z][\\w_\\$]*"),
-    LOWER_IDENTIFIER("[a-z][\\w_\\$]*"),
-    DOLLAR_IDENTIFIER("\\$[\\w_\\$]*"),
-    UNDERSCORE_IDENTIFIER("_[\\w_\\$]*"),
+    LOWER_IDENTIFIER("[a-z_][\\w_\\$]*"), // combine both _ and lowercase grammar
+    DOLLAR_IDENTIFIER("\\$[a-z][\\w_\\$]*"),
+    //UNDERSCORE_IDENTIFIER("_[\\w_\\$]*"),
     
     ALL0S_LITERAL("\'0"),
     ALL1S_LITERAL("\'1"),
     INT_LITERAL("(([\\+\\-])?\\d+)"),
     BIT_LITERAL("(\\d+|\\+|\\-)?\'(([dD][0-9_]+)|([hH][0-9a-fA-F_]+)|([bB][01_]+))"),
-    STRING_LITERAL("\"[^\\n]*\""),
+    STRING_LITERAL("\"[^\\\"\\r\\t\\f\\n]*\""),
 
     SEMICOLON_PUNC(";"),
     LEFT_BRACE_PUNC("\\{"),
