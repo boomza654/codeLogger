@@ -52,7 +52,7 @@ public enum TokenType {
     
     ALL0S_LITERAL("\'0"),
     ALL1S_LITERAL("\'1"),
-    INT_LITERAL("(([\\+\\-])?\\d+)"),
+    INT_LITERAL("(([\\+\\-])?[\\d_]+)"), 
     BIT_LITERAL("(\\d+|\\+|\\-)?\'(([dD][0-9_]+)|([hH][0-9a-fA-F_]+)|([bB][01_]+))"),
     STRING_LITERAL("\"[^\\\"\\r\\t\\f\\n]*\""),
 

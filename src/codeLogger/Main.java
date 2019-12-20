@@ -17,11 +17,8 @@ public class Main {
 
         final List<List<TokenizedWord>> words = Lexer.tokenizeFileByLine("src/tokenParser/test2.ms");
 
-        final List<TokenizedWord> firstLine = new ArrayList<>(words.get(0));
-        firstLine.addAll(words.get(1));
-        firstLine.addAll(words.get(2));        
-        firstLine.addAll(words.get(3)); 
-        firstLine.addAll(words.get(4));
+        final List<TokenizedWord> firstLine = new ArrayList<>();
+        words.forEach((s)->firstLine.addAll(s));
 
 
         System.out.println(firstLine);

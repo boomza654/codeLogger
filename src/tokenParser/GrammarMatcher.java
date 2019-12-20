@@ -27,7 +27,10 @@ public class GrammarMatcher {
         Pair<Integer,List<ParseTree>> result = parser.parseAndMove(TokenProdExpr.nonT(startNonterminal), 0);
         Pair<Integer,List<ParseTree>> resultEnd = parser.parseAndMove(TokenProdExpr.empty(), result.first); // get rid of trailing white space
         if(resultEnd.first != words.size()){
-            System.err.println("Under parse Unmatched: "+ words.subList(resultEnd.first, words.size()));
+            List<TokenizedWord> unmatched = words.subList(resultEnd.first, words.size());
+            System.err.println("Under parse Unmatched: ");
+            unmatched.forEach((s)-> System.err.print(s.content + " "));
+            System.err.println();
         }
         assert result.second.size()==1: " return non 1 children";
         return result.second.get(0);

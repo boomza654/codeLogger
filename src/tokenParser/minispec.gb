@@ -23,6 +23,8 @@
 identifier = $Lower_identifier | $Upper_identifier
 any_identifier = $Lower_identifier | $Upper_identifier | $Dollar_identifier
 
+//literals
+
 
 //args for function declaring
 arg = expression
@@ -31,7 +33,7 @@ argFormal = type , $Lower_identifier
 argFormals = $left_paren_punc , ( argFormal , ( $comma_punc , argFormal ) * ) ? , $right_paren_punc
 
 // Types format
-type = $upper_identifier , params ?
+type = $upper_identifier , params ? // This is to declare varaible with types
 
 // param for inputting to type delaration
 params = $sharp_punc , $left_paren_punc , ( param , ( $comma_punc , param ) * ) ? , $right_paren_punc
@@ -48,10 +50,13 @@ the_rest = . // basically all other things outside module
 importDecl = $import_keyword , identifier , ( $comma_punc , identifier ) * , $semicolon_punc
 bsvImportDecl = $bsvimport_keyword , $upper_identifier , ( $comma_punc , $upper_identifier ) * , $semicolon_punc
 
-//module
-moduleDef = $module_keyword , moduleId , argFormals ? , $semicolon_punc , moduleStmt * , $endmodule_keyword
-moduleId = $Upper_identifier , paramFormals ? 
+//type defs
+typeDecl = typeDefSynonym  | typeDefEnum  | typeDefStruct
+typeId = $Upper_identifier , paramFormals ? // this is to declare what type alias to
+typeDefSynonym = $typedef_keyword , type , typeId , $semicolon_punc
+typeDefEnum = $typedef_keyword , $enum_keyword , $left_brace_punc , typeDefEnumElement , ( $comma_punc , typeDefEnumElement ) * , $right_brace_punc , $upper_identifier , $semicolon_punc
+typeDefEnumElement = $upper_identifier , ( $eq_op , )
 
-packageStmt = importDecl | bsvImportDecl | moduleDef | the_rest
+packageStmt = importDecl | bsvImportDecl | typeDecl | moduleDef 
 packageDef = packageStmt * // The outer most level
 start = packageDef
