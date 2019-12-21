@@ -58,14 +58,14 @@ public class Parser {
             CommonTokenStream tokstream = new CommonTokenStream(lexer);
             MinispecParser parser = new MinispecParser(tokstream);
 
-            ParseTree tree = parser.packageDef(); // will initiaite the parsign here
+            MinispecParser.PackageDefContext tree = parser.packageDef(); // will initiaite the parsign here
 
             System.out.println(tokstream.getTokens().size()); // stream is not consumed
             System.out.println(tokstream.getTokens().size());
-            ParseTreeWalker walker = new ParseTreeWalker();
+            //ParseTreeWalker walker = new ParseTreeWalker();
             //walker.walk(new TestListener(), tree);
             System.out.println("yey");
-            //System.out.println(tree.toStringTree());
+            System.out.println(tree);
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
