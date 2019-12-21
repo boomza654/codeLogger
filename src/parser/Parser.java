@@ -65,7 +65,7 @@ public class Parser {
             //ParseTreeWalker walker = new ParseTreeWalker();
             //walker.walk(new TestListener(), tree);
             System.out.println("yey");
-            System.out.println(tree);
+            System.out.println(tree.children.get(0).getText());
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

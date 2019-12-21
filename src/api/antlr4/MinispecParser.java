@@ -149,6 +149,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitLowerCaseIdentifier(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitLowerCaseIdentifier(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final LowerCaseIdentifierContext lowerCaseIdentifier() throws RecognitionException {
@@ -185,6 +190,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitUpperCaseIdentifier(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitUpperCaseIdentifier(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -227,6 +237,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitIdentifier(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitIdentifier(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -285,6 +300,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitAnyIdentifier(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitAnyIdentifier(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -347,6 +367,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitArg(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitArg(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final ArgContext arg() throws RecognitionException {
@@ -388,6 +413,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitArgs(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitArgs(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -461,6 +491,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitArgFormal(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitArgFormal(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final ArgFormalContext argFormal() throws RecognitionException {
@@ -504,6 +539,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitArgFormals(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitArgFormals(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -577,6 +617,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitParam(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitParam(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final ParamContext param() throws RecognitionException {
@@ -631,6 +676,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitParams(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitParams(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -713,6 +763,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitParamFormal(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitParamFormal(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final ParamFormalContext paramFormal() throws RecognitionException {
@@ -778,6 +833,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitParamFormals(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitParamFormals(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -853,6 +913,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitType(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitType(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final TypeContext type() throws RecognitionException {
@@ -906,6 +971,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitPackageDef(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitPackageDef(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -975,6 +1045,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitPackageStmt(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitPackageStmt(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -1062,6 +1137,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitImportDecl(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitImportDecl(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final ImportDeclContext importDecl() throws RecognitionException {
@@ -1124,6 +1204,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitBsvImportDecl(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitBsvImportDecl(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -1191,6 +1276,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitTypeDecl(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitTypeDecl(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final TypeDeclContext typeDecl() throws RecognitionException {
@@ -1253,6 +1343,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitTypeDefSynonym(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitTypeDefSynonym(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final TypeDefSynonymContext typeDefSynonym() throws RecognitionException {
@@ -1301,6 +1396,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitTypeId(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitTypeId(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -1357,6 +1457,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitTypeDefEnum(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitTypeDefEnum(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -1429,6 +1534,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitTypeDefEnumElement(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitTypeDefEnumElement(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final TypeDefEnumElementContext typeDefEnumElement() throws RecognitionException {
@@ -1486,6 +1596,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitTypeDefStruct(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitTypeDefStruct(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -1554,6 +1669,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitStructMember(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitStructMember(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final StructMemberContext structMember() throws RecognitionException {
@@ -1612,6 +1732,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitLetBinding(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitLetBinding(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class VarBindingContext extends VarDeclContext {
 		public TypeContext type() {
@@ -1631,6 +1756,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitVarBinding(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitVarBinding(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -1768,6 +1898,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitVarInit(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitVarInit(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final VarInitContext varInit() throws RecognitionException {
@@ -1828,6 +1963,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitModuleDef(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitModuleDef(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -1903,6 +2043,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitModuleId(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitModuleId(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final ModuleIdContext moduleId() throws RecognitionException {
@@ -1964,6 +2109,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitModuleStmt(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitModuleStmt(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -2045,6 +2195,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitSubmoduleDecl(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitSubmoduleDecl(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final SubmoduleDeclContext submoduleDecl() throws RecognitionException {
@@ -2106,6 +2261,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitInputDef(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitInputDef(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -2182,6 +2342,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitMethodDef(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitMethodDef(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -2282,6 +2447,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitRuleDef(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitRuleDef(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final RuleDefContext ruleDef() throws RecognitionException {
@@ -2356,6 +2526,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitFunctionDef(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitFunctionDef(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -2453,6 +2628,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitFunctionId(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitFunctionId(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final FunctionIdContext functionId() throws RecognitionException {
@@ -2510,6 +2690,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitVarAssign(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitVarAssign(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -2609,6 +2794,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitMemberLvalue(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitMemberLvalue(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class IndexLvalueContext extends LvalueContext {
 		public ExpressionContext index;
@@ -2627,6 +2817,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitIndexLvalue(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitIndexLvalue(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class SimpleLvalueContext extends LvalueContext {
 		public LowerCaseIdentifierContext lowerCaseIdentifier() {
@@ -2640,6 +2835,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitSimpleLvalue(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitSimpleLvalue(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 	public static class SliceLvalueContext extends LvalueContext {
@@ -2662,6 +2862,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitSliceLvalue(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitSliceLvalue(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -2788,6 +2993,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitOperatorExpr(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitOperatorExpr(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class CondExprContext extends ExpressionContext {
 		public ExpressionContext pred;
@@ -2805,6 +3015,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitCondExpr(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitCondExpr(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 	public static class CaseExprContext extends ExpressionContext {
@@ -2825,6 +3040,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitCaseExpr(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitCaseExpr(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -2977,6 +3197,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitCaseExprItem(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitCaseExprItem(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final CaseExprItemContext caseExprItem() throws RecognitionException {
@@ -3074,6 +3299,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitBinopExpr(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitBinopExpr(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -3340,6 +3570,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitUnopExpr(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitUnopExpr(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final UnopExprContext unopExpr() throws RecognitionException {
@@ -3454,6 +3689,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitVarExpr(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitVarExpr(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class BitConcatContext extends ExprPrimaryContext {
 		public List<ExpressionContext> expression() {
@@ -3471,6 +3711,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitBitConcat(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitBitConcat(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class StringLiteralContext extends ExprPrimaryContext {
 		public TerminalNode StringLiteral() { return getToken(MinispecParser.StringLiteral, 0); }
@@ -3483,6 +3728,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitStringLiteral(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitStringLiteral(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class IntLiteralContext extends ExprPrimaryContext {
 		public TerminalNode IntLiteral() { return getToken(MinispecParser.IntLiteral, 0); }
@@ -3494,6 +3744,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitIntLiteral(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitIntLiteral(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 	public static class ReturnExprContext extends ExprPrimaryContext {
@@ -3508,6 +3763,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitReturnExpr(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitReturnExpr(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 	public static class StructExprContext extends ExprPrimaryContext {
@@ -3526,6 +3786,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitStructExpr(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitStructExpr(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class UndefinedExprContext extends ExprPrimaryContext {
 		public UndefinedExprContext(ExprPrimaryContext ctx) { copyFrom(ctx); }
@@ -3536,6 +3801,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitUndefinedExpr(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitUndefinedExpr(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 	public static class BlockExprContext extends ExprPrimaryContext {
@@ -3550,6 +3820,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitBlockExpr(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitBlockExpr(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 	public static class SliceExprContext extends ExprPrimaryContext {
@@ -3574,6 +3849,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitSliceExpr(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitSliceExpr(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class CallExprContext extends ExprPrimaryContext {
 		public ExprPrimaryContext fcn;
@@ -3595,6 +3875,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitCallExpr(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitCallExpr(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class FieldExprContext extends ExprPrimaryContext {
 		public IdentifierContext field;
@@ -3613,6 +3898,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitFieldExpr(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitFieldExpr(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class ParenExprContext extends ExprPrimaryContext {
 		public ExpressionContext expression() {
@@ -3626,6 +3916,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitParenExpr(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitParenExpr(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -3902,6 +4197,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitMemberBinds(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitMemberBinds(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final MemberBindsContext memberBinds() throws RecognitionException {
@@ -3962,6 +4262,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitMemberBind(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitMemberBind(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final MemberBindContext memberBind() throws RecognitionException {
@@ -4007,6 +4312,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitBeginEndBlock(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitBeginEndBlock(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -4068,6 +4378,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitRegWrite(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitRegWrite(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -4132,6 +4447,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitStmt(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitStmt(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -4237,6 +4557,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitIfStmt(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitIfStmt(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final IfStmtContext ifStmt() throws RecognitionException {
@@ -4304,6 +4629,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitCaseStmt(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitCaseStmt(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -4383,6 +4713,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitCaseStmtItem(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitCaseStmtItem(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final CaseStmtItemContext caseStmtItem() throws RecognitionException {
@@ -4443,6 +4778,11 @@ public class MinispecParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitCaseStmtDefaultItem(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitCaseStmtDefaultItem(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final CaseStmtDefaultItemContext caseStmtDefaultItem() throws RecognitionException {
@@ -4502,6 +4842,11 @@ public class MinispecParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof MinispecListener ) ((MinispecListener)listener).exitForStmt(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof MinispecVisitor ) return ((MinispecVisitor<? extends T>)visitor).visitForStmt(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
