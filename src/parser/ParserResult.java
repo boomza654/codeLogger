@@ -24,7 +24,7 @@ public class ParserResult {
      * parseTree is not aliasing with token List anymore
      * 
      * @param str string to be parsed
-     * @returna a Parser with initialized parseTree of packageDef root
+     * @returna a result of Parsing with initialized parseTree of packageDef root
      */
     public static ParserResult fromString(String str) {
         CharStream charstream = CharStreams.fromString(str);
@@ -36,7 +36,7 @@ public class ParserResult {
      * parseTree is not aliasing with token List anymore
      * 
      * @param fileName name of file containing things to parse ( minispec)
-     * @return a Parser with initialized parseTree of packageDef root
+     * @return a result of Parsing with initialized parseTree of packageDef root
      * @throws IOException if cannot open file
      */
     public static ParserResult fromFileName(String fileName) throws IOException {
