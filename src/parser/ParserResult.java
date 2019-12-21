@@ -14,11 +14,24 @@ import api.antlr4.*;
  * @author boomza654
  *
  */
-public class Parser {
+public class ParserResult {
     private final List<Token> tokenList ;
     private final ParseTree parseTree;
+    
     /**
-     * Factory method create parser from file
+     * Factory method to parse things from from String
+     * 
+     * parseTree is not aliasing with token List anymore
+     * 
+     * @param str string to be parsed
+     * @returna a Parser with initialized parseTree of packageDef root
+     */
+    public static ParserResult fromString(String str) {
+        CharStream charstream = CharStreams.fromString(str);
+        return new ParserResult(charstream);
+    }
+    /**
+     * Factory method to parse things from file
      * 
      * parseTree is not aliasing with token List anymore
      * 
@@ -26,11 +39,11 @@ public class Parser {
      * @return a Parser with initialized parseTree of packageDef root
      * @throws IOException if cannot open file
      */
-    public static Parser fromFileName(String fileName) throws IOException {
+    public static ParserResult fromFileName(String fileName) throws IOException {
         CharStream charstream = CharStreams.fromFileName(fileName);
-        return new Parser(charstream);
+        return new ParserResult(charstream);
     }
-    private Parser(CharStream charstream) {
+    private ParserResult(CharStream charstream) {
         MinispecLexer lexer = new MinispecLexer(charstream);
         CommonTokenStream tokstream = new CommonTokenStream(lexer);
         MinispecParser parser = new MinispecParser(tokstream);
@@ -65,13 +78,10 @@ public class Parser {
             //ParseTreeWalker walker = new ParseTreeWalker();
             //walker.walk(new TestListener(), tree);
             System.out.println("yey");
-            System.out.println(tree.children.get(0).getText());
+            System.out.println(tree.children.get(0).getClass().getCanonicalName());
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-    }
-    static class TestListener extends MinispecBaseListener{
-        @Override public void visitTerminal(TerminalNode node) { System.out.println(node.getText());}
     }
 }
