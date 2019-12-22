@@ -87,12 +87,26 @@ public class Translator {
          * @param col col number
          * @return the '"tag varName =", fshow(expr)' string
          */
-        private String setStmt(String tag, String varName, String expr, int row, int col) { 
+        private String setVarStmt(String tag, String varName, String expr, int row, int col) { 
             final int totLength = tag.length()+varName.length();
             final int toFill = tabSize-1-totLength%tabSize;
             String spaces =""; for(int i=0;i<toFill; i++) spaces+=" ";
             return "\""+tag+": "+varName+spaces+" =  \", fshow("+expr+") , \" @ "+row+","+col+"\"";
         }
+        /**
+         * 
+         * @param tag tag of what to descrbie s
+         * @param lhs the thing to be inserted between
+         * @param expr the String of expressino being written into varName
+         * @param row row number
+         * @param col col number
+         * @return the '"tag ",lhs," =", fshow(expr)' string (with no tab spacing ( since the spacing is dynamic)
+         */
+        private static String setLhsStmt(String tag, String lhs, String expr, int row, int col) { 
+           
+            return "\""+tag+": \", "+lhs+", \" =  \", fshow("+expr+") , \" @ "+row+","+col+"\"";
+        }
+        
         
         /**
          *  add display statement of dashes at token index *position*
@@ -108,10 +122,10 @@ public class Translator {
          */
         private void addDisplayWatcher(int position) {
             for(String regName : allRegNames) {
-                insertToCode(position,displayStmt(showStmt("Reg", regName)));
+                insertToCode(position,displayStmt(showStmt("Reg ", regName)));
             }
             for(String inputName : allInputNames) {
-                insertToCode(position,displayStmt(showStmt("Input", inputName)));
+                insertToCode(position,displayStmt(showStmt("Inpt", inputName)));
             }
             //System.out.println(toInsertAt.get(position));
         }
@@ -126,7 +140,7 @@ public class Translator {
             String expr = (ctx.rhs==null)?"":ctx.rhs.getText();
             final int lineNo = tokenList.get(ctx.getSourceInterval().a).getLine(); // the line of the left most token
             final int colNo = tokenList.get(ctx.getSourceInterval().a).getCharPositionInLine()+1; // get the column
-            insertToCode(position, displayStmt(setStmt("Init",varName,expr,lineNo,colNo)));
+            insertToCode(position, displayStmt(setVarStmt("Init",varName,expr,lineNo,colNo)));
 
         }
         
@@ -140,10 +154,51 @@ public class Translator {
             String expr = (ctx.rhs==null)?"":ctx.rhs.getText();
             final int lineNo = tokenList.get(ctx.getSourceInterval().a).getLine(); // the line of the left most token
             final int colNo = tokenList.get(ctx.getSourceInterval().a).getCharPositionInLine()+1; // get the column
-            insertToCode(position, displayStmt(setStmt("Init",varName,expr,lineNo,colNo)));
+            insertToCode(position, displayStmt(setVarStmt("Init",varName,expr,lineNo,colNo)));
 
         }
-        
+        /**
+         *  add watcher on ctx Variable assignment
+         * @param position position to add
+         * @param ctx the ParseTree Of the Assignment (must only have 1 lvalue ( simple assignment not concat assignment))
+         */
+        private void addDisplayVarAssign(int position, MinispecParser.VarAssignContext ctx) {
+            String lhs="\""; // will always have trailing " until the loop ends
+            MinispecParser.LvalueContext currentNode = ctx.lvalue(0); //  traverse down lvalue chain
+            boolean innermostLvalue=false;
+            do{
+                boolean isSimple = currentNode instanceof MinispecParser.SimpleLvalueContext;
+                boolean isMember = currentNode instanceof MinispecParser.MemberLvalueContext;
+                boolean isIndex = currentNode instanceof MinispecParser.IndexLvalueContext;
+                boolean isSlice = currentNode instanceof MinispecParser.SliceLvalueContext;
+                if(isSimple) {
+                    MinispecParser.SimpleLvalueContext cur = (MinispecParser.SimpleLvalueContext) currentNode;
+                    innermostLvalue=true;
+                    lhs= "\""+cur.lowerCaseIdentifier().getText()+lhs;
+                    
+                } else if(isMember) {
+                    MinispecParser.MemberLvalueContext cur = (MinispecParser.MemberLvalueContext) currentNode;
+                    lhs="."+cur.lowerCaseIdentifier().getText()+lhs;
+                    currentNode=cur.lvalue();
+                }else if(isIndex) {
+                    MinispecParser.IndexLvalueContext cur = (MinispecParser.IndexLvalueContext) currentNode;
+                    lhs="[%0d]\","+cur.expression().getText()+",\""+lhs;
+                    currentNode=cur.lvalue();
+                }
+                else if(isSlice) {
+                    MinispecParser.SliceLvalueContext cur = (MinispecParser.SliceLvalueContext) currentNode;
+                    lhs="[%0d:%0d]\","+cur.expression(0).getText()+","+cur.expression(1).getText()+",\""+lhs;
+                    currentNode=cur.lvalue();
+                }
+                else {throw new RuntimeException("Should not reach here");}
+            } while (!innermostLvalue);
+            if(lhs.isBlank()) lhs="\"\""; // Super FAIL SAFE PLAN In case Things go wrong
+            String expr = (ctx.expression()==null)?"":ctx.expression().getText();
+            final int lineNo = tokenList.get(ctx.getSourceInterval().a).getLine(); // the line of the left most token
+            final int colNo = tokenList.get(ctx.getSourceInterval().a).getCharPositionInLine()+1; // get the column
+            insertToCode(position, displayStmt(setLhsStmt("Set ",lhs,expr,lineNo,colNo)));
+
+        }
         /**********************
          *
          *  Visitor Part
@@ -251,13 +306,21 @@ public class Translator {
             //System.out.println(toInsertAt.get(position));
             return null;
         }
+        // Varassign
+        @Override public Void visitVarAssign(MinispecParser.VarAssignContext ctx) { 
+            final int position = ctx.getSourceInterval().b+1;
+            assert ctx.lvalue().size()==1 : "concat of assignment. Not quite sure what to do";
+            addDisplayVarAssign(position, ctx);
+            System.out.println(toInsertAt.get(position));
+            return null;
+        }
     }
     /**
      *  main method and its arg
      * @param args sldkfjlskdjf
      */
     public static void main(String[] args) {
-        final String fileName = "input_dir/Multipliers.ms";
+        final String fileName = "input_dir/SortingNetworks_BoomVersion.ms";
         try {
             ParserResult p = ParserResult.fromFileName(fileName);
             TranslateVisitor translator = new TranslateVisitor("",p.tokenList());
