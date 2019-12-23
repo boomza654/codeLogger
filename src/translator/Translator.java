@@ -654,6 +654,7 @@ public class Translator {
      * @param args the givne args
      */
     public static void main(String[] args) {
-        run(new String[] {"-v","input_dir/Multipliers.ms", "output_dir/MultipliersDebug.ms"});
+        //final String[] debugArgs=new String[] {"-v","input_dir/Multipliers.ms", "output_dir/MultipliersDebug.ms"};
+        run(args);
     }
 }
