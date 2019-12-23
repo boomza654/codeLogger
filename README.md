@@ -20,6 +20,8 @@ For Minispec language with almost no debugging tool except printf's
 - Main Usage: `java translator.Translator <input file name> <output file name>` to translate the minispec source file in inputfile Name into a version with debugging statement and write it down to output file name.
 ## Verion
 - 1.0 with adding display ability
+## Known Bug
+- Cannot show the assignment correctly when implicit casting is involved Ex ` Bit#(3) a = {0,b};`
 
 ## Dependency
 - `Java` ( Not quite sure which version it should be but the development was done using `Java(TM) SE Runtime Environment (build 12.0.2+10)`
