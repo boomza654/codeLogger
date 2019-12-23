@@ -33,16 +33,16 @@ public class Translator {
         private final Map<Integer,String> toInsertAt = new HashMap<>();
         private final String prefix = "Boom Debug:";
         private final int tabSize = 4;
-        private final String toTranslateModuleName;
+        private final String toTranslateModuleId;
         private int currentScopeLevel = -1; // level 0 a rule scope
         
         /**
          * Initialize the current aimed to translate module name
-         * @param moduleName to be translated
+         * @param moduleId to be translated or empty if want to translate all
          * @param tokenList the List of Lexer's token 
          */
-        public TranslateVisitor(String moduleName, List<Token> tokenLists) {
-            this.toTranslateModuleName=moduleName;
+        public TranslateVisitor(String moduleId, List<Token> tokenLists) {
+            this.toTranslateModuleId=moduleId;
             this.tokenList=List.copyOf(tokenLists);
         }
         /**
@@ -71,6 +71,21 @@ public class Translator {
          * @return a String of display statement
          */
         private String displayStmt(String s) { return "$display(\""+prefix+"\", "+s+");";}
+        
+        /**
+         * Get the indentation before or at  the token position position
+         * @param pos the token index
+         * @return the indentation string
+         */
+        private String getIndentation(int pos) {
+            int index=pos;
+            while(index>=0 && !tokenList.get(index).getText().contains("\n")) index--;
+            if(index==-1) // start of file and no white space
+                return "";
+            String whitespace = tokenList.get(index).getText();
+            int newlineIndex = whitespace.lastIndexOf("\n");
+            return whitespace.substring(newlineIndex+1);
+        }
         /**
          * 
          * @param tag tag of what to descrbie s
@@ -196,24 +211,25 @@ public class Translator {
          *  add display statement of dashes at token index *position*
          *  
          *  This is inserted right after rule name so need \n infront
-         * @param position to add 
+         * @param position to add  (intended to be index of a white space that possible has \n right after rule decl)
          */
         private void addDisplayDash(int position) {
-            String stmt = "\n$display(\"--------------------\");";
-            insertToCode(position, stmt);            
+            String stmt = "$display(\"--------------------\");";
+            insertToCode(position, "\n"+getIndentation(position)+stmt);            
         }
         /**
          * add watch statement in the header of the rule in the toInsert At
          * 
          *  This is inserted right after rule name so need \n infront
-         * @param position position to add (which should be at the start of the rule when rule decl finish)
+         * @param position position to add (intended to be index of a white space that possible has \n right after rule decl)
          */
         private void addDisplayWatcher(int position) {
+            String indent = getIndentation(position);
             for(String regName : allSubModNames) {
-                insertToCode(position,"\n"+displayStmt(showStmt("Modl ", regName)));
+                insertToCode(position,"\n"+indent+displayStmt(showStmt("Modl ", regName)));
             }
             for(String inputName : allInputNames) {
-                insertToCode(position,"\n"+displayStmt(showStmt("Input", inputName)));
+                insertToCode(position,"\n"+indent+displayStmt(showStmt("Input", inputName)));
             }
             //System.out.println(toInsertAt.get(position));
         }
@@ -221,7 +237,7 @@ public class Translator {
         /**
          *  add watcher on ctx Variable initialization
          *  
-         *  This is inserted right before init so need \n at back
+         *  This is inserted right before init 
          * @param position position to add
          * @param ctx the ParseTree Of the Initialization
          */
@@ -230,7 +246,7 @@ public class Translator {
             String expr = (ctx.rhs==null)?"":ctx.rhs.getText();
             final int lineNo = tokenList.get(ctx.getSourceInterval().a).getLine(); // the line of the left most token
             final int colNo = tokenList.get(ctx.getSourceInterval().a).getCharPositionInLine()+1; // get the column
-            insertToCode(position, displayStmt(setVarStmt("Init ",varName,expr,lineNo,colNo))+"\n");
+            insertToCode(position, displayStmt(setVarStmt("Init ",varName,expr,lineNo,colNo))+" ");
 
         }
         
@@ -246,7 +262,7 @@ public class Translator {
             String expr = (ctx.rhs==null)?"\"\"":ctx.rhs.getText();
             final int lineNo = tokenList.get(ctx.getSourceInterval().a).getLine(); // the line of the left most token
             final int colNo = tokenList.get(ctx.getSourceInterval().a).getCharPositionInLine()+1; // get the column
-            insertToCode(position, displayStmt(setVarStmt("Init ",varName,expr,lineNo,colNo))+"\n");
+            insertToCode(position, displayStmt(setVarStmt("Init ",varName,expr,lineNo,colNo))+" ");
 
         }
         
@@ -262,7 +278,7 @@ public class Translator {
             String expr = (ctx.expression()==null)?"\"\"":ctx.expression().getText();
             final int lineNo = tokenList.get(ctx.getSourceInterval().a).getLine(); // the line of the left most token
             final int colNo = tokenList.get(ctx.getSourceInterval().a).getCharPositionInLine()+1; // get the column
-            insertToCode(position, displayStmt(setLhsStmt("Set  ",lhs,expr,lineNo,colNo))+"\n");
+            insertToCode(position, displayStmt(setLhsStmt("Set  ",lhs,expr,lineNo,colNo))+" ");
 
         }
         /**
@@ -277,7 +293,7 @@ public class Translator {
             String expr = ctx.expression().getText();
             final int lineNo = tokenList.get(ctx.getSourceInterval().a).getLine(); // the line of the left most token
             final int colNo = tokenList.get(ctx.getSourceInterval().a).getCharPositionInLine()+1; // get the column
-            insertToCode(position, displayStmt(setLhsStmt("Write",lhs,expr,lineNo,colNo))+"\n");
+            insertToCode(position, displayStmt(setLhsStmt("Write",lhs,expr,lineNo,colNo))+" ");
 
         }
         /**
@@ -292,7 +308,7 @@ public class Translator {
             String expr = ctx.expression().getText();
             final int lineNo = tokenList.get(ctx.getSourceInterval().a).getLine(); // the line of the left most token
             final int colNo = tokenList.get(ctx.getSourceInterval().a).getCharPositionInLine()+1; // get the column
-            insertToCode(position, displayStmt(setVarStmt("If   ","Taken",expr,lineNo,colNo))+"\n");
+            insertToCode(position, displayStmt(setVarStmt("If   ","Taken",expr,lineNo,colNo))+"\n" + getIndentation(position));
 
         }
         /**
@@ -307,7 +323,7 @@ public class Translator {
             String expr = ctx.expression().getText();
             final int lineNo = tokenList.get(ctx.getSourceInterval().a).getLine(); // the line of the left most token
             final int colNo = tokenList.get(ctx.getSourceInterval().a).getCharPositionInLine()+1; // get the column
-            insertToCode(position, displayStmt(setVarStmt("Case ","Choice",expr,lineNo,colNo))+"\n");
+            insertToCode(position, displayStmt(setVarStmt("Case ","Choice",expr,lineNo,colNo))+"\n"+ getIndentation(position));
 
         }
         
@@ -326,13 +342,26 @@ public class Translator {
             return null;
         }
         /**
+         *  get All text including white space in the Interval x
+         * @param x the interval
+         * @return all text in te interval x
+         */
+        private String getAllText(Interval x) {
+            if(x.equals(Interval.INVALID)) return "";
+            final int a=x.a,b=x.b;
+            String out="";
+            for(int i=a;i<=b;i++) out+= tokenList.get(i).getText();
+            return out;
+        }
+        /**
          * Read everything in the module and add display statement into its rule accordingly
          */
         @Override public Void visitModuleDef(MinispecParser.ModuleDefContext ctx) {
             assert ctx.moduleId()!=null : "module with no Identifier ?!?!?";
             assert ctx.moduleId().name!=null : "module with no name!?!?!";
-            String moduleName = ctx.moduleId().name.getText();
-            System.out.println("Found module Name : "+moduleName);
+            String moduleName = getAllText(ctx.moduleId().getSourceInterval());
+            System.out.println("Found module Id : "+moduleName);
+            if(!(toTranslateModuleId.isEmpty() || moduleName.equals(toTranslateModuleId))) return null; // skip if not the intended module name
             // Find all register + submodule first
             for(MinispecParser.ModuleStmtContext childctx: ctx.moduleStmt()) {
 
@@ -450,15 +479,14 @@ public class Translator {
             final int endcol = tokenList.get(endpos).getCharPositionInLine()+1;
             
             currentScopeLevel++;
-            insertToCode(startpos, "\n"+displayStmt(scopeStmt("Enter", currentScopeLevel, startrow, startcol)));
+            insertToCode(startpos, "\n"+ getIndentation(startpos-1)+displayStmt(scopeStmt("Enter", currentScopeLevel, startrow, startcol)));
             for(MinispecParser.StmtContext childctx:ctx.stmt()) visit(childctx);
-            insertToCode(endpos, displayStmt(scopeStmt("Exit ", currentScopeLevel, endrow, endcol))+"\n");
+            insertToCode(endpos, displayStmt(scopeStmt("Exit ", currentScopeLevel, endrow, endcol))+"\n"+ getIndentation(endpos));
             currentScopeLevel--;
             return null;
         }
         // if
         @Override public Void visitIfStmt(MinispecParser.IfStmtContext ctx) { 
-            MinispecParser.ExpressionContext exprctx = ctx.expression();
             final int position = ctx.getSourceInterval().a;
             addDisplayIf(position, ctx);
             addScopeIfSingleStmtThenVisit(ctx.stmt(0));
@@ -468,7 +496,7 @@ public class Translator {
         }
         //Case stmt
         @Override public Void visitCaseStmt(MinispecParser.CaseStmtContext ctx) {
-            MinispecParser.ExpressionContext exprctx = ctx.expression();
+            
             final int position = ctx.getSourceInterval().a;
             addDisplayCaseStmt(position, ctx);
             for(MinispecParser.CaseStmtItemContext childctx: ctx.caseStmtItem()) {
@@ -493,9 +521,9 @@ public class Translator {
             boolean isBeginEndBlock = (ctx.beginEndBlock()!=null);
             final int startpos = ctx.getSourceInterval().a;
             final int endpos = ctx.getSourceInterval().b+1;
-            if(!isBeginEndBlock) insertToCode(startpos, "begin\n"); // inserted right before single statment
+            if(!isBeginEndBlock) insertToCode(startpos, "begin\n" + getIndentation(startpos)); // inserted right before single statment
             visit(ctx);
-            if(!isBeginEndBlock) insertToCode(endpos, "\nend"); // inserted right after single stateement
+            if(!isBeginEndBlock) insertToCode(endpos, "\n"+ getIndentation(endpos)+"end"); // inserted right after single stateement
             
             return null;
         }

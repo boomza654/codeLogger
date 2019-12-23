@@ -25,7 +25,7 @@ module BoomTester;
 	BitonicSorter#(8) testmodule;
 	Reg#(Bool) sent(False);
 	rule test;
-		Vector#(8,Word) dataIn;
+                Vector#(8,Word) dataIn;
 		dataIn[0]=4;
 		dataIn[1]=8;
 		dataIn[2]=2;
