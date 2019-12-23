@@ -31,10 +31,12 @@ public class Translator {
         private final List<Token> tokenList;
         
         private final Map<Integer,String> toInsertAt = new HashMap<>();
-        private final String prefix = "CodeLogger:";
+        private final String prefix = "<CodeLogger>:";
         private final int tabSize = 4;
         private final String toTranslateModuleId;
+        private final String scopeIndentShow = "  "; // pls use only non  tab or new line to maintain size == coolumn variant
         private int currentScopeLevel = -1; // level 0 a rule scope
+        
         
         /**
          * Initialize the current aimed to translate module name
@@ -93,10 +95,11 @@ public class Translator {
          * @return the '"tag s", fshow(s)' string
          */
         private String showStmt(String tag, String s) { 
-            final int totLength = tag.length()+s.length();
+            String scopeIndent = ""; for(int i=0;i<currentScopeLevel;i++) scopeIndent +=scopeIndentShow;
+            final int totLength = tag.length()+scopeIndent.length();s.length();
             final int toFill = tabSize-1-totLength%tabSize;
             String spaces =""; for(int i=0;i<toFill; i++) spaces+=" ";
-            return "\""+tag+": "+s+spaces+" =  \", fshow("+s+")";
+            return "\""+tag+": "+scopeIndent+s+spaces+" =  \", fshow("+s+")";
         }
 
         /**
@@ -104,7 +107,7 @@ public class Translator {
          * @param ctx the LValue context
          * @return the string to show the the l value into display
          */
-        private static String showLhsStmt(MinispecParser.LvalueContext ctx) {
+        private static String lhsStmt(MinispecParser.LvalueContext ctx) {
             List<String> parts = new ArrayList<>();
             //String lhs="\""; // will always have trailing " until the loop ends
             MinispecParser.LvalueContext currentNode = ctx; //  traverse down lvalue chain
@@ -154,11 +157,13 @@ public class Translator {
          * @param col col number
          * @return the '"tag varName =", fshow(expr)' string
          */
-        private String setVarStmt(String tag, String varName, String expr, int row, int col) { 
-            final int totLength = tag.length()+varName.length();
+        private String showVarEqExprStmt(String tag, String varName, String expr, int row, int col) { 
+
+            String scopeIndent = ""; for(int i=0;i<currentScopeLevel;i++) scopeIndent +=scopeIndentShow;
+            final int totLength = tag.length()+scopeIndent.length()+varName.length();
             final int toFill = tabSize-1-totLength%tabSize;
             String spaces =""; for(int i=0;i<toFill; i++) spaces+=" ";
-            return "\""+tag+": "+varName+spaces+" =  \", fshow("+expr+") , \" @ "+row+","+col+"\"";
+            return "\""+tag+": "+scopeIndent+varName+spaces+" =  \", fshow("+expr+") , \" @ "+row+","+col+"\"";
         }
         /**
          * 
@@ -169,8 +174,9 @@ public class Translator {
          * @param col col number
          * @return the '"tag ",lhs," =", fshow(expr)' string (with no tab spacing ( since the spacing is dynamic)
          */
-        private static String setLhsStmt(String tag, String lhs, String expr, int row, int col) { 
-            return "\""+tag+": \", "+lhs+", \" =  \", fshow("+expr+") , \" @ "+row+","+col+"\"";
+        private String showLhsEqExprStmt(String tag, String lhs, String expr, int row, int col) { 
+            String scopeIndent = ""; for(int i=0;i<currentScopeLevel;i++) scopeIndent +=scopeIndentShow;
+            return "\""+tag+": "+scopeIndent+"\", "+lhs+", \" =  \", fshow("+expr+") , \" @ "+row+","+col+"\"";
         }
         
         /**
@@ -207,6 +213,19 @@ public class Translator {
             }
             return false;
         }
+        
+        /**
+         * This will generate an auto cast Block Expr of 
+         *  begin let temp = lhsexpr; temp=expr; temp; end
+         *  so that the expression will be auto casted to the type of lhsexpr
+         * @param lhsexpr variable that we want to cast expr into its type
+         * @param expr the expression to be casted
+         * @return the expression as described above
+         */
+        private static String autoCastBlockExpr(String lhsexpr,String expr) {
+
+            return "begin let temp = "+lhsexpr+"; temp = "+expr+";  temp; end";
+        }
         /**
          *  add display statement of dashes at token index *position*
          *  
@@ -226,43 +245,44 @@ public class Translator {
         private void addDisplayWatcher(int position) {
             String indent = getIndentation(position);
             for(String regName : allSubModNames) {
-                insertToCode(position,"\n"+indent+displayStmt(showStmt("Modl ", regName)));
+                insertToCode(position,"\n"+indent+displayStmt(showStmt("State", regName)));
             }
             for(String inputName : allInputNames) {
                 insertToCode(position,"\n"+indent+displayStmt(showStmt("Input", inputName)));
             }
+            insertToCode(position , "\n"+indent); 
             //System.out.println(toInsertAt.get(position));
         }
 
         /**
          *  add watcher on ctx Variable initialization
          *  
-         *  This is inserted right before init 
+         *  This is inserted right after init
          * @param position position to add
          * @param ctx the ParseTree Of the Initialization
          */
         private void addDisplayVarInit(int position, MinispecParser.VarInitContext ctx) {
             String varName=ctx.var.getText();
-            String expr = (ctx.rhs==null)?"":ctx.rhs.getText();
+            //String expr = (ctx.rhs==null)?"":ctx.rhs.getText();
             final int lineNo = tokenList.get(ctx.getSourceInterval().a).getLine(); // the line of the left most token
             final int colNo = tokenList.get(ctx.getSourceInterval().a).getCharPositionInLine()+1; // get the column
-            insertToCode(position, displayStmt(setVarStmt("Init ",varName,expr,lineNo,colNo))+" ");
+            insertToCode(position, displayStmt(showVarEqExprStmt("Init ",varName,varName,lineNo,colNo))+" ");
 
         }
         
         /**
          *  add watcher on ctx Variable initialization using let
          *  
-         *  This is inserted right before let so need \n at back
+         *  This is inserted right after let 
          * @param position position to add
          * @param ctx the ParseTree Of the Initialization by let
          */
         private void addDisplayVarInitLet(int position, MinispecParser.LetBindingContext ctx) {
             String varName=ctx.lowerCaseIdentifier(0).getText();
-            String expr = (ctx.rhs==null)?"\"\"":ctx.rhs.getText();
+            //String expr = (ctx.rhs==null)?"\"\"":ctx.rhs.getText();
             final int lineNo = tokenList.get(ctx.getSourceInterval().a).getLine(); // the line of the left most token
             final int colNo = tokenList.get(ctx.getSourceInterval().a).getCharPositionInLine()+1; // get the column
-            insertToCode(position, displayStmt(setVarStmt("Init ",varName,expr,lineNo,colNo))+" ");
+            insertToCode(position, displayStmt(showVarEqExprStmt("Init ",varName,varName,lineNo,colNo))+" ");
 
         }
         
@@ -274,11 +294,13 @@ public class Translator {
          * @param ctx the ParseTree Of the Assignment (must only have 1 lvalue ( simple assignment not concat assignment))
          */
         private void addDisplayVarAssign(int position, MinispecParser.VarAssignContext ctx) {
-            String lhs = showLhsStmt(ctx.lvalue(0));
+            String lhs = lhsStmt(ctx.lvalue(0));
+            String lhsexpr = ctx.lvalue(0).getText();
             String expr = (ctx.expression()==null)?"\"\"":ctx.expression().getText();
+            expr = autoCastBlockExpr(lhsexpr, expr);
             final int lineNo = tokenList.get(ctx.getSourceInterval().a).getLine(); // the line of the left most token
             final int colNo = tokenList.get(ctx.getSourceInterval().a).getCharPositionInLine()+1; // get the column
-            insertToCode(position, displayStmt(setLhsStmt("Set  ",lhs,expr,lineNo,colNo))+" ");
+            insertToCode(position, displayStmt(showLhsEqExprStmt("Set  ",lhs,expr,lineNo,colNo))+" ");
 
         }
         /**
@@ -289,11 +311,14 @@ public class Translator {
          * @param ctx the ParseTree Of the register write
          */
         private void addDisplayRegWrite(int position, MinispecParser.RegWriteContext ctx) {
-            String lhs = showLhsStmt(ctx.lvalue());
+            String lhs = lhsStmt(ctx.lvalue());
+            String lhsexpr = ctx.lvalue().getText();
             String expr = ctx.expression().getText();
+            // make auto casting using lhs let
+            expr = autoCastBlockExpr(lhsexpr, expr);
             final int lineNo = tokenList.get(ctx.getSourceInterval().a).getLine(); // the line of the left most token
             final int colNo = tokenList.get(ctx.getSourceInterval().a).getCharPositionInLine()+1; // get the column
-            insertToCode(position, displayStmt(setLhsStmt("Write",lhs,expr,lineNo,colNo))+" ");
+            insertToCode(position, displayStmt(showLhsEqExprStmt("Write",lhs,expr,lineNo,colNo))+" ");
 
         }
         /**
@@ -308,7 +333,7 @@ public class Translator {
             String expr = ctx.expression().getText();
             final int lineNo = tokenList.get(ctx.getSourceInterval().a).getLine(); // the line of the left most token
             final int colNo = tokenList.get(ctx.getSourceInterval().a).getCharPositionInLine()+1; // get the column
-            insertToCode(position, displayStmt(setVarStmt("If   ","Taken",expr,lineNo,colNo))+"\n" + getIndentation(position));
+            insertToCode(position, displayStmt(showVarEqExprStmt("If   ",expr,expr,lineNo,colNo))+"\n" + getIndentation(position));
 
         }
         /**
@@ -323,7 +348,7 @@ public class Translator {
             String expr = ctx.expression().getText();
             final int lineNo = tokenList.get(ctx.getSourceInterval().a).getLine(); // the line of the left most token
             final int colNo = tokenList.get(ctx.getSourceInterval().a).getCharPositionInLine()+1; // get the column
-            insertToCode(position, displayStmt(setVarStmt("Case ","Choice",expr,lineNo,colNo))+"\n"+ getIndentation(position));
+            insertToCode(position, displayStmt(showVarEqExprStmt("Case ",expr,expr,lineNo,colNo))+"\n"+ getIndentation(position));
 
         }
         
@@ -439,7 +464,7 @@ public class Translator {
          ******************/
         // VarDecl
         @Override public Void visitVarBinding(MinispecParser.VarBindingContext ctx)  { 
-            final int position = ctx.getSourceInterval().a;
+            final int position = ctx.getSourceInterval().b+1;
             for(MinispecParser.VarInitContext childctx: ctx.varInit()) {
                 addDisplayVarInit(position, childctx);
             }
@@ -447,7 +472,7 @@ public class Translator {
             return null;
         }
         @Override public Void visitLetBinding(MinispecParser.LetBindingContext ctx) {
-            final int position = ctx.getSourceInterval().a;
+            final int position = ctx.getSourceInterval().b+1;
             assert ctx.lowerCaseIdentifier().size()==1: " more than 1 identifier being initialized Not quite sure how to deal";
             // TODO Deal with let {a,b} = syntax; ??!?
             addDisplayVarInitLet(position, ctx);
@@ -469,7 +494,7 @@ public class Translator {
             //System.out.println(toInsertAt.get(position));
             return null;
         }
-        // block
+        // block Stmt not Block Expr
         @Override public Void visitBeginEndBlock(MinispecParser.BeginEndBlockContext ctx) { 
             final int startpos = ctx.getSourceInterval().a+1;
             final int endpos = ctx.getSourceInterval().b;
@@ -537,6 +562,7 @@ public class Translator {
      * @param verbose verbose?
      */
     private static void print(PrintWriter pw,String text, boolean verbose) {
+        if(text.equals("<EOF>")) return;
         pw.print(text);
         pw.flush();
         if(verbose)
@@ -544,10 +570,10 @@ public class Translator {
     }
     
     /**
-     *  main method and its arg
+     * run this thing with given arg (perserve main for Testing)
      * @param args look At Help String pls
      */
-    public static void main(String[] args) {
+    public static void run(String[] args) {
         System.out.println("Input argument : "+Arrays.toString(args));
         final String helpMessage = "usage: [--option] input_filename output_filename \n\n" + 
                 "Result : Will Add debugging statement to input_filename and write it to output_filename \n\n"+
@@ -620,5 +646,14 @@ public class Translator {
             e.printStackTrace();
         }
         System.out.println("Finished translation");
+    }
+    
+    
+    /**
+     * Run the program with given arg
+     * @param args the givne args
+     */
+    public static void main(String[] args) {
+        run(new String[] {"-v","input_dir/Multipliers.ms", "output_dir/MultipliersDebug.ms"});
     }
 }
