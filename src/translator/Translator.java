@@ -31,7 +31,7 @@ public class Translator {
         private final List<Token> tokenList;
         
         private final Map<Integer,String> toInsertAt = new HashMap<>();
-        private final String prefix = "Boom Debug:";
+        private final String prefix = "CodeLogger:";
         private final int tabSize = 4;
         private final String toTranslateModuleId;
         private int currentScopeLevel = -1; // level 0 a rule scope
