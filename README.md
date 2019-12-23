@@ -14,6 +14,7 @@ For Minispec language with almost no debugging tool except printf's
    - Branching taken for both If and Case Statement
    - Scope Entering and exiting
 - TODO: Create a real debugger from those output
+- TODO: Make a class that centralize Debug adding and real debugging
 ## Usage
 - add `bin` and `lib/antlr-4.7.2-complete.jar` to class path then run`java translator.Translator --help`
 ## Verion
