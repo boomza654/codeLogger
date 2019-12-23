@@ -529,27 +529,96 @@ public class Translator {
         }
         
     }
+    
+    /**
+     * Output text to printwriter pw and also output to stdou if verbose is true
+     * @param pw the prinWriter object ot output
+     * @param text the text to print
+     * @param verbose verbose?
+     */
+    private static void print(PrintWriter pw,String text, boolean verbose) {
+        pw.print(text);
+        pw.flush();
+        if(verbose)
+            System.out.print(text);
+    }
+    
     /**
      *  main method and its arg
-     * @param args sldkfjlskdjf
+     * @param args look At Help String pls
      */
     public static void main(String[] args) {
-        final String fileName = "input_dir/SortingNetworks_BoomVersion.ms";
-        try {
+        System.out.println("Input argument : "+Arrays.toString(args));
+        final String helpMessage = "usage: [--option] input_filename output_filename \n\n" + 
+                "Result : Will Add debugging statement to input_filename and write it to output_filename \n\n"+
+                "Available option:\n" + 
+                "  --module <moduleid>                     only add Debugging tatement to a single module \n"+ 
+                "                                          (default to adding all module in the inputFile)\n" + 
+                "  -v,--verbose                            Show Log message out to stdout as well (default to false)\n" + 
+                "  -h,--help                               Print help message\n" + 
+                "\n\n"+
+                "<moduleid> is the module name with the parameter that defines it\n";
+        final String errorMessage = "Type -h,--help option to gain more info";
+        String moduleId="";
+        String fileName="";
+        String outFileName="";
+        boolean verbose=false;
+        for(int i=0;i<args.length;i++)
+        {
+            String arg=args[i];
+            //System.out.println(arg);
+            if(arg.equals("--module")) {
+                if(i+1>=args.length) {
+                    System.out.println("no module Id after --module ??");
+                    System.out.println(errorMessage);
+                    return;
+                }
+                moduleId=args[i+1];
+                i++;
+                continue;
+            } 
+            else if (arg.equals("-v") || arg.equals("--verbose")) 
+                verbose=true;
+            else if (arg.equals("-h") || arg.equals("--help")) {
+                System.out.println(helpMessage);
+                return;
+            }
+            else {
+                if(i!=args.length-2) {
+                    System.out.println("Format Error");
+                    System.out.println(errorMessage);
+                    return;
+                }
+                fileName=args[i];
+                outFileName=args[i+1];
+                i++;
+            }
+            
+        }
+
+        if(args.length<2) {
+
+            System.out.println("too few arguments");
+            System.out.println(errorMessage);
+            return;
+        }
+        try(PrintWriter pw = new PrintWriter(outFileName);) {
             ParserResult p = ParserResult.fromFileName(fileName);
-            TranslateVisitor translator = new TranslateVisitor("",p.tokenList());
+            TranslateVisitor translator = new TranslateVisitor(moduleId,p.tokenList());
             translator.visit(p.parseTree());
             Map<Integer,String> insertionMap = translator.getInsertionMap();
             for(int i=0;i<p.tokenList().size();i++) {
-                if(insertionMap.containsKey(i))
-                    System.out.print(insertionMap.get(i));
-                System.out.print(p.tokenList().get(i).getText());
+                if(insertionMap.containsKey(i)) {
+                    print(pw,insertionMap.get(i),verbose);
+                }
+                print(pw,p.tokenList().get(i).getText(),verbose);
             }
             if(insertionMap.containsKey(p.tokenList().size()))
-                System.out.print(insertionMap.get(p.tokenList().size()));
+                print(pw,insertionMap.get(p.tokenList().size()),verbose);
             
-        } catch (IOException e) {
+        } catch ( IOException e) {
             e.printStackTrace();
         }
+        System.out.println("Finished translation");
     }
 }
