@@ -578,7 +578,7 @@ public class Translator {
         final String helpMessage = "usage: [--option] input_filename output_filename \n\n" + 
                 "Result : Will Add debugging statement to input_filename and write it to output_filename \n\n"+
                 "Available option:\n" + 
-                "  --module <moduleid>                     only add Debugging tatement to a single module \n"+ 
+                "  -m, --module <moduleid>                 only add Debugging tatement to a single module \n"+ 
                 "                                          (default to adding all module in the inputFile)\n" + 
                 "  -v,--verbose                            Show Log message out to stdout as well (default to false)\n" + 
                 "  -h,--help                               Print help message\n" + 
@@ -593,7 +593,7 @@ public class Translator {
         {
             String arg=args[i];
             //System.out.println(arg);
-            if(arg.equals("--module")) {
+            if(arg.equals("-m") || arg.equals("--module")) {
                 if(i+1>=args.length) {
                     System.out.println("no module Id after --module ??");
                     System.out.println(errorMessage);
