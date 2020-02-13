@@ -105,20 +105,17 @@ $display("<CodeLogger>:", "Enter: Scope Level    =  1 @ 91,14");
             //     $finish;
             // end
             //$display("%x|", pc);
-            $display("<CodeLogger>:", "If   :   isValid(f2d) =  ", fshow(isValid(f2d)) , " @ 99,13");
-if (isValid(f2d)) begin
+            $display("<CodeLogger>:", "If   :   isValid(f2d) =  ", fshow(isValid(f2d)) , " @ 99,13"); if (isValid(f2d)) begin
 $display("f2d:", fshow(fromMaybe(?,f2d)));
 end else begin
 $display("f2d:", "NOP");
             end  
-            $display("<CodeLogger>:", "If   :   isValid(d2e) =  ", fshow(isValid(d2e)) , " @ 100,13");
-            if (isValid(d2e)) begin
+            $display("<CodeLogger>:", "If   :   isValid(d2e) =  ", fshow(isValid(d2e)) , " @ 100,13"); if (isValid(d2e)) begin
             $display("d2e:", fshow(fromMaybe(?,d2e)));
             end else begin
             $display("d2e:", "NOP");
             end  
-            $display("<CodeLogger>:", "If   :   isValid(e2w) =  ", fshow(isValid(e2w)) , " @ 101,13");
-            if (isValid(e2w)) begin
+            $display("<CodeLogger>:", "If   :   isValid(e2w) =  ", fshow(isValid(e2w)) , " @ 101,13"); if (isValid(e2w)) begin
             $display("e2w:", fshow(fromMaybe(?,e2w)));
             end else begin
             $display("e2w:", "NOP");
@@ -150,15 +147,13 @@ $display("f2d:", "NOP");
         //if dStall is true then stall the entire pipeline
         Bool wStall = False;$display("<CodeLogger>:", "Init : wStall =  ", fshow(wStall) , " @ 126,14"); 
 
-        $display("<CodeLogger>:", "If   : isValid(e2w)   =  ", fshow(isValid(e2w)) , " @ 128,9");
-        if (isValid(e2w)) begin
+        $display("<CodeLogger>:", "If   : isValid(e2w)   =  ", fshow(isValid(e2w)) , " @ 128,9"); if (isValid(e2w)) begin
         $display("<CodeLogger>:", "Enter: Scope Level    =  1 @ 128,32");
             let e2w_v = fromMaybe(?, e2w);$display("<CodeLogger>:", "Init :   e2w_v    =  ", fshow(e2w_v) , " @ 129,13"); 
             $display("WriteBack:", fshow(e2w_v));
             Word data = e2w_v.data;$display("<CodeLogger>:", "Init :   data =  ", fshow(data) , " @ 131,18"); 
             $display("<CodeLogger>:", "Set  :   ", "dataW", " =  ", fshow(begin let temp = dataW; temp = Valid(data);  temp; end) , " @ 132,13"); dataW=Valid(data); // LOAD is the only thing that has dst but has invlid data
-            $display("<CodeLogger>:", "If   :   e2w_v.iType==LOAD    =  ", fshow(e2w_v.iType==LOAD) , " @ 133,13");
-if(e2w_v.iType == LOAD ) begin
+            $display("<CodeLogger>:", "If   :   e2w_v.iType==LOAD    =  ", fshow(e2w_v.iType==LOAD) , " @ 133,13"); if(e2w_v.iType == LOAD ) begin
 $display("<CodeLogger>:", "Enter: Scope Level    =  2 @ 133,43");
                 $display("<CodeLogger>:", "Set  :     ", "data", " =  ", fshow(begin let temp = data; temp = fromMaybe(0,dCache.data);  temp; end) , " @ 134,17"); data= fromMaybe(0,dCache.data);
                 $display("<CodeLogger>:", "Set  :     ", "wStall", " =  ", fshow(begin let temp = wStall; temp = !isValid(dCache.data);  temp; end) , " @ 135,17"); wStall= !isValid(dCache.data) ;
@@ -166,8 +161,7 @@ $display("<CodeLogger>:", "Enter: Scope Level    =  2 @ 133,43");
             $display("<CodeLogger>:", "Exit : Scope Level    =  2 @ 137,13");
             end
 
-            $display("<CodeLogger>:", "If   :   isValid(e2w_v.dst)   =  ", fshow(isValid(e2w_v.dst)) , " @ 139,13");
-            if(isValid(e2w_v.dst)) begin
+            $display("<CodeLogger>:", "If   :   isValid(e2w_v.dst)   =  ", fshow(isValid(e2w_v.dst)) , " @ 139,13"); if(isValid(e2w_v.dst)) begin
             $display("<CodeLogger>:", "Enter: Scope Level    =  2 @ 139,41");
                 $display("RF Write: ", fshow(RegWriteArgs{index: fromMaybe(?,e2w_v.dst), data:data}));
                 $display("<CodeLogger>:", "Set  :     ", "rf.wr", " =  ", fshow(begin let temp = rf.wr; temp = Valid(RegWriteArgs{index:fromMaybe(?,e2w_v.dst),data:data});  temp; end) , " @ 141,17"); rf.wr=Valid(RegWriteArgs{index: fromMaybe(?,e2w_v.dst), data:data});
@@ -182,8 +176,7 @@ $display("<CodeLogger>:", "Enter: Scope Level    =  2 @ 133,43");
 
             // BEGIN: DO NOT REMOVE OR MODIFY THIS CODE
             // If unsupported instruction, stops simulation and print the state of the processor
-            $display("<CodeLogger>:", "If   :   e2w_v.iType==Unsupported =  ", fshow(e2w_v.iType==Unsupported) , " @ 152,13");
-if (e2w_v.iType == Unsupported) begin
+            $display("<CodeLogger>:", "If   :   e2w_v.iType==Unsupported =  ", fshow(e2w_v.iType==Unsupported) , " @ 152,13"); if (e2w_v.iType == Unsupported) begin
 $display("<CodeLogger>:", "Enter: Scope Level    =  2 @ 152,50");
                 $display("Reached unsupported instruction");
                 $display("Dumping the state of the processor");
@@ -198,8 +191,7 @@ $display("<CodeLogger>:", "Enter: Scope Level    =  2 @ 152,50");
 end
         $display("wStall: ",fshow(wStall));
 
-        $display("<CodeLogger>:", "If   : !wStall    =  ", fshow(!wStall) , " @ 164,9");
-        if(!wStall) begin
+        $display("<CodeLogger>:", "If   : !wStall    =  ", fshow(!wStall) , " @ 164,9"); if(!wStall) begin
         $display("<CodeLogger>:", "Set  : ", "cur_e2w", " =  ", fshow(begin let temp = cur_e2w; temp = Invalid;  temp; end) , " @ 164,21"); cur_e2w=Invalid;
         end
         ///////////////////
@@ -221,23 +213,20 @@ end
         Word redirectPC = ?;$display("<CodeLogger>:", "Init : redirectPC =  ", fshow(redirectPC) , " @ 181,14"); 
 
         // Signals used by decode to handle data hazards
-        $display("<CodeLogger>:", "If   : isValid(d2e)   =  ", fshow(isValid(d2e)) , " @ 184,9");
-if(isValid(d2e)) begin
+        $display("<CodeLogger>:", "If   : isValid(d2e)   =  ", fshow(isValid(d2e)) , " @ 184,9"); if(isValid(d2e)) begin
 $display("<CodeLogger>:", "Enter: Scope Level    =  1 @ 184,31");
             $display("<CodeLogger>:", "Set  :   ", "dstE", " =  ", fshow(begin let temp = dstE; temp = fromMaybe(0,edInst.dst);  temp; end) , " @ 185,13"); dstE =fromMaybe(0,edInst.dst);
             $display("<CodeLogger>:", "Set  :   ", "dataE", " =  ", fshow(begin let temp = dataE; temp = (eInst.iType==LOAD)?Invalid:Valid(eInst.data);  temp; end) , " @ 186,13"); dataE=(eInst.iType == LOAD)?Invalid: Valid(eInst.data);
         $display("<CodeLogger>:", "Exit : Scope Level    =  1 @ 187,9");
         end
 
-        $display("<CodeLogger>:", "If   : fire_execute   =  ", fshow(fire_execute) , " @ 189,9");
-        if (fire_execute) begin
+        $display("<CodeLogger>:", "If   : fire_execute   =  ", fshow(fire_execute) , " @ 189,9"); if (fire_execute) begin
         $display("<CodeLogger>:", "Enter: Scope Level    =  1 @ 189,32");
             
             $display("Execute :", fshow(d2e_v));
             
 
-            $display("<CodeLogger>:", "If   :   access_dCache    =  ", fshow(access_dCache) , " @ 194,13");
-            if(access_dCache) begin
+            $display("<CodeLogger>:", "If   :   access_dCache    =  ", fshow(access_dCache) , " @ 194,13"); if(access_dCache) begin
             $display("<CodeLogger>:", "Enter: Scope Level    =  2 @ 194,36");
                 MemOp op = case(edInst.iType)
                     LOAD: Ld;
@@ -255,8 +244,7 @@ $display("<CodeLogger>:", "Enter: Scope Level    =  1 @ 184,31");
             $display("<CodeLogger>:", "Set  :   ", "annul", " =  ", fshow(begin let temp = annul; temp = (eInst.nextPc!=d2e_v.guessed_pc);  temp; end) , " @ 207,13"); annul=  (eInst.nextPc!=d2e_v.guessed_pc);
             $display("<CodeLogger>:", "Set  :   ", "redirectPC", " =  ", fshow(begin let temp = redirectPC; temp = eInst.nextPc;  temp; end) , " @ 208,13"); redirectPC=eInst.nextPc;
             
-            $display("<CodeLogger>:", "If   :   is_branch    =  ", fshow(is_branch) , " @ 210,13");
-            if(is_branch) begin
+            $display("<CodeLogger>:", "If   :   is_branch    =  ", fshow(is_branch) , " @ 210,13"); if(is_branch) begin
             $display("<CodeLogger>:", "Enter: Scope Level    =  2 @ 210,32");
                 $display("<CodeLogger>:", "Set  :     ", "btb.req", " =  ", fshow(begin let temp = btb.req; temp = Valid(BTBArgs{pc:pcE[11:0],next_pc:eInst.nextPc[11:0]});  temp; end) , " @ 211,17"); btb.req= Valid(BTBArgs{pc:pcE[11:0], next_pc: eInst.nextPc[11:0]});
                 // update BTB
@@ -273,12 +261,10 @@ end
         /////////////////////
         //Redirection logic//
         /////////////////////
-        $display("<CodeLogger>:", "If   : annul  =  ", fshow(annul) , " @ 224,9");
-if(annul)begin
+        $display("<CodeLogger>:", "If   : annul  =  ", fshow(annul) , " @ 224,9"); if(annul)begin
 $display("<CodeLogger>:", "Enter: Scope Level    =  1 @ 224,23");
             $display("Redirect to : ",fshow(redirectPC));
-            $display("<CodeLogger>:", "If   :   isValid(cur_f2d) =  ", fshow(isValid(cur_f2d)) , " @ 226,13");
-            if(isValid(cur_f2d)) begin
+            $display("<CodeLogger>:", "If   :   isValid(cur_f2d) =  ", fshow(isValid(cur_f2d)) , " @ 226,13"); if(isValid(cur_f2d)) begin
             $display("<CodeLogger>:", "Enter: Scope Level    =  2 @ 226,39");
                 $display("<CodeLogger>:", "Set  :     ", "cur_f2d", " =  ", fshow(begin let temp = cur_f2d; temp = Valid(F2D{poisoned:True});  temp; end) , " @ 227,17"); cur_f2d=Valid(F2D{ poisoned:True});
                 $display("Poisoning f2d");
@@ -299,22 +285,18 @@ $display("<CodeLogger>:", "Enter: Scope Level    =  1 @ 224,23");
         DecodedInst dInst = decode(inst);$display("<CodeLogger>:", "Init : dInst  =  ", fshow(dInst) , " @ 241,21"); 
         
         Maybe#(Word) rVal1 = Valid(rf.rd1(dInst.src1));$display("<CodeLogger>:", "Init : rVal1  =  ", fshow(rVal1) , " @ 243,22"); 
-        $display("<CodeLogger>:", "If   : dInst.src1!=0&&dInst.src1==dstW    =  ", fshow(dInst.src1!=0&&dInst.src1==dstW) , " @ 244,9");
-        if(dInst.src1 !=0 && dInst.src1 == dstW) begin
+        $display("<CodeLogger>:", "If   : dInst.src1!=0&&dInst.src1==dstW    =  ", fshow(dInst.src1!=0&&dInst.src1==dstW) , " @ 244,9"); if(dInst.src1 !=0 && dInst.src1 == dstW) begin
         $display("<CodeLogger>:", "Set  : ", "rVal1", " =  ", fshow(begin let temp = rVal1; temp = dataW;  temp; end) , " @ 244,50"); rVal1=dataW;
         end
-        $display("<CodeLogger>:", "If   : dInst.src1!=0&&dInst.src1==dstE    =  ", fshow(dInst.src1!=0&&dInst.src1==dstE) , " @ 245,9");
-        if(dInst.src1 !=0 && dInst.src1 == dstE) begin
+        $display("<CodeLogger>:", "If   : dInst.src1!=0&&dInst.src1==dstE    =  ", fshow(dInst.src1!=0&&dInst.src1==dstE) , " @ 245,9"); if(dInst.src1 !=0 && dInst.src1 == dstE) begin
         $display("<CodeLogger>:", "Set  : ", "rVal1", " =  ", fshow(begin let temp = rVal1; temp = dataE;  temp; end) , " @ 245,50"); rVal1=dataE;
         end
         Word val1 = fromMaybe(?,rVal1);$display("<CodeLogger>:", "Init : val1   =  ", fshow(val1) , " @ 246,14"); 
         Maybe#(Word) rVal2 = Valid(rf.rd2(dInst.src2));$display("<CodeLogger>:", "Init : rVal2  =  ", fshow(rVal2) , " @ 247,22"); 
-        $display("<CodeLogger>:", "If   : dInst.src2!=0&&dInst.src2==dstW    =  ", fshow(dInst.src2!=0&&dInst.src2==dstW) , " @ 248,9");
-        if(dInst.src2 !=0 && dInst.src2 == dstW) begin
+        $display("<CodeLogger>:", "If   : dInst.src2!=0&&dInst.src2==dstW    =  ", fshow(dInst.src2!=0&&dInst.src2==dstW) , " @ 248,9"); if(dInst.src2 !=0 && dInst.src2 == dstW) begin
         $display("<CodeLogger>:", "Set  : ", "rVal2", " =  ", fshow(begin let temp = rVal2; temp = dataW;  temp; end) , " @ 248,50"); rVal2=dataW;
         end
-        $display("<CodeLogger>:", "If   : dInst.src2!=0&&dInst.src2==dstE    =  ", fshow(dInst.src2!=0&&dInst.src2==dstE) , " @ 249,9");
-        if(dInst.src2 !=0 && dInst.src2 == dstE) begin
+        $display("<CodeLogger>:", "If   : dInst.src2!=0&&dInst.src2==dstE    =  ", fshow(dInst.src2!=0&&dInst.src2==dstE) , " @ 249,9"); if(dInst.src2 !=0 && dInst.src2 == dstE) begin
         $display("<CodeLogger>:", "Set  : ", "rVal2", " =  ", fshow(begin let temp = rVal2; temp = dataE;  temp; end) , " @ 249,50"); rVal2=dataE;
         end
         Word val2 = fromMaybe(?,rVal2);$display("<CodeLogger>:", "Init : val2   =  ", fshow(val2) , " @ 250,14"); 
@@ -335,8 +317,7 @@ $display("<CodeLogger>:", "Enter: Scope Level    =  1 @ 224,23");
         
         // Real pc that decode should decode here is pc (if ! annul)
         // and it should be something else if annul
-        $display("<CodeLogger>:", "If   : fire_decode    =  ", fshow(fire_decode) , " @ 268,9");
-if (fire_decode) begin
+        $display("<CodeLogger>:", "If   : fire_decode    =  ", fshow(fire_decode) , " @ 268,9"); if (fire_decode) begin
 $display("<CodeLogger>:", "Enter: Scope Level    =  1 @ 268,31");
 
             $display("Decode:", fshow(D2E{pc: cur_pc, guessed_pc: guessed_pc, dInst: dInst, rVal1:val1, rVal2: val2}));
@@ -346,8 +327,7 @@ $display("<CodeLogger>:", "Enter: Scope Level    =  1 @ 268,31");
         $display("<CodeLogger>:", "Exit : Scope Level    =  1 @ 274,9");
         end 
         
-        $display("<CodeLogger>:", "If   : poision_decode =  ", fshow(poision_decode) , " @ 276,9");
-        if(poision_decode) begin
+        $display("<CodeLogger>:", "If   : poision_decode =  ", fshow(poision_decode) , " @ 276,9"); if(poision_decode) begin
         $display("<CodeLogger>:", "Enter: Scope Level    =  1 @ 276,33");
             $display("<CodeLogger>:", "Set  :   ", "cur_d2e", " =  ", fshow(begin let temp = cur_d2e; temp = Invalid;  temp; end) , " @ 277,13"); cur_d2e=Invalid;
         $display("<CodeLogger>:", "Exit : Scope Level    =  1 @ 278,9");
@@ -362,15 +342,13 @@ $display("<CodeLogger>:", "Enter: Scope Level    =  1 @ 268,31");
         // That is cur_f2d must always be valid
 
         // Calculate fetch pc;
-        $display("<CodeLogger>:", "If   : annul  =  ", fshow(annul) , " @ 289,9");
-if(annul) begin
+        $display("<CodeLogger>:", "If   : annul  =  ", fshow(annul) , " @ 289,9"); if(annul) begin
 $display("<CodeLogger>:", "Enter: Scope Level    =  1 @ 289,24");
             $display("<CodeLogger>:", "Set  :   ", "cur_pc", " =  ", fshow(begin let temp = cur_pc; temp = redirectPC;  temp; end) , " @ 290,13"); cur_pc=redirectPC;
         $display("<CodeLogger>:", "Exit : Scope Level    =  1 @ 291,9");
         end else begin
         $display("<CodeLogger>:", "Enter: Scope Level    =  1 @ 291,23");
-            $display("<CodeLogger>:", "If   :   fire_decode&&!poision_decode =  ", fshow(fire_decode&&!poision_decode) , " @ 292,13");
-            if(fire_decode && !poision_decode) begin
+            $display("<CodeLogger>:", "If   :   fire_decode&&!poision_decode =  ", fshow(fire_decode&&!poision_decode) , " @ 292,13"); if(fire_decode && !poision_decode) begin
             $display("<CodeLogger>:", "Enter: Scope Level    =  2 @ 292,53");
                 $display("<CodeLogger>:", "Set  :     ", "cur_pc", " =  ", fshow(begin let temp = cur_pc; temp = guessed_pc;  temp; end) , " @ 293,17"); cur_pc=guessed_pc;
             $display("<CodeLogger>:", "Exit : Scope Level    =  2 @ 294,13");
@@ -382,8 +360,7 @@ $display("<CodeLogger>:", "Enter: Scope Level    =  1 @ 289,24");
         $display("<CodeLogger>:", "Exit : Scope Level    =  1 @ 297,9");
         end
         // fetch next px
-        $display("<CodeLogger>:", "If   : iCache.reqEnabled  =  ", fshow(iCache.reqEnabled) , " @ 299,9");
-if(iCache.reqEnabled )begin
+        $display("<CodeLogger>:", "If   : iCache.reqEnabled  =  ", fshow(iCache.reqEnabled) , " @ 299,9"); if(iCache.reqEnabled )begin
 $display("<CodeLogger>:", "Enter: Scope Level    =  1 @ 299,36");
             $display("Fetch ", fshow(MemReq{op:Ld, addr:cur_pc, data: 0}));
             $display("<CodeLogger>:", "Set  :   ", "iCache.req", " =  ", fshow(begin let temp = iCache.req; temp = Valid(MemReq{op:Ld,addr:cur_pc,data:0});  temp; end) , " @ 301,13"); iCache.req = Valid(MemReq{op:Ld, addr:cur_pc, data: 0});

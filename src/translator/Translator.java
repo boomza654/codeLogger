@@ -333,7 +333,7 @@ public class Translator {
             String expr = ctx.expression().getText();
             final int lineNo = tokenList.get(ctx.getSourceInterval().a).getLine(); // the line of the left most token
             final int colNo = tokenList.get(ctx.getSourceInterval().a).getCharPositionInLine()+1; // get the column
-            insertToCode(position, displayStmt(showVarEqExprStmt("If   ",expr,expr,lineNo,colNo))+"\n" + getIndentation(position));
+            insertToCode(position, displayStmt(showVarEqExprStmt("If   ",expr,expr,lineNo,colNo))+" ");
 
         }
         /**
