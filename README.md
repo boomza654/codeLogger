@@ -16,7 +16,9 @@ For Minispec language with almost no debugging tool except printf's
 - TODO: Create a real debugger from those output
 - TODO: Make a class that centralize Debug adding and real debugging
 ## Usage
-- add `bin` and `lib/antlr-4.7.2-complete.jar` to class path then run`java translator.Translator --help` for all usage
+- add `bin` and `lib/antlr-4.7.2-complete.jar` to class path
+  - On window : `set CLASSPATH="%CLASSPATH%;bin;lib/antlr-4.7.2-complete.jar"`
+- run `java translator.Translator --help` for all usage
 - Main Usage: `java translator.Translator <input file name> <output file name>` to translate the minispec source file in inputfile Name into a version with debugging statement and write it down to output file name.
 ## Verion
 - 1.0 with adding display ability
