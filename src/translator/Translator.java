@@ -80,13 +80,24 @@ public class Translator {
          * @return the indentation string
          */
         private String getIndentation(int pos) {
+            
             int index=pos;
             while(index>=0 && !tokenList.get(index).getText().contains("\n")) index--;
             if(index==-1) // start of file and no white space
                 return "";
-            String whitespace = tokenList.get(index).getText();
-            int newlineIndex = whitespace.lastIndexOf("\n");
-            return whitespace.substring(newlineIndex+1);
+            if(tokenList.get(index).getType()==MinispecLexer.OneLineComment) { // one line comment also absorb \n into itself
+                index++;
+                if(tokenList.get(index).getType()==MinispecLexer.WhiteSpace)
+                    return tokenList.get(index).getText();
+                else
+                    return "";
+            }
+            else {
+                // Normal case where \n exists inside white space
+                String whitespace = tokenList.get(index).getText();
+                int newlineIndex = whitespace.lastIndexOf("\n");
+                return whitespace.substring(newlineIndex+1);
+            }
         }
         /**
          * 
@@ -333,8 +344,7 @@ public class Translator {
             String expr = ctx.expression().getText();
             final int lineNo = tokenList.get(ctx.getSourceInterval().a).getLine(); // the line of the left most token
             final int colNo = tokenList.get(ctx.getSourceInterval().a).getCharPositionInLine()+1; // get the column
-            insertToCode(position, displayStmt(showVarEqExprStmt("If   ",expr,expr,lineNo,colNo))+" ");
-
+            insertToCode(position, displayStmt(showVarEqExprStmt("If   ",expr,expr,lineNo,colNo))+"\n" + getIndentation(position));
         }
         /**
          *  add watcher on ctx CaseStmt branching
