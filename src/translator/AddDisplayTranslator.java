@@ -3,12 +3,9 @@ package translator;
 import java.io.*;
 import java.util.*;
 
-import javax.swing.text.DefaultEditorKit.InsertContentAction;
 
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.Interval;
-import org.antlr.v4.runtime.tree.*;
-
 import api.antlr4.*;
 import parser.*;
 /**
@@ -16,7 +13,7 @@ import parser.*;
  * @author boomza654
  *
  */
-public class Translator {
+public class AddDisplayTranslator {
     
 
     
@@ -43,9 +40,9 @@ public class Translator {
          * @param moduleId to be translated or empty if want to translate all
          * @param tokenList the List of Lexer's token 
          */
-        public TranslateVisitor(String moduleId, List<Token> tokenLists) {
+        public TranslateVisitor(String moduleId, List<Token> tokenList) {
             this.toTranslateModuleId=moduleId;
-            this.tokenList=List.copyOf(tokenLists);
+            this.tokenList=List.copyOf(tokenList);
         }
         /**
          * 
