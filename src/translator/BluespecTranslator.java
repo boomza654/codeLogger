@@ -80,7 +80,8 @@ public class BluespecTranslator {
         String fullInFileName = path+inFileName;
         String fullOutFileName= path+"out.bsv";
         try {
-            System.out.println(Utility.getImportListFromFile(fullInFileName));
+            Object x= (ParsedFile.parseAndSortAllFilesStartingAt(inFileName, path));
+            System.out.println(x);
         } catch( IOException e){
             e.printStackTrace();
         }
@@ -90,7 +91,7 @@ public class BluespecTranslator {
      * @param args the givne args
      */
     public static void main(String[] args) {
-        final String[] debugArgs=new String[] {"-p","input_dir","SortingNetworks_BoomVersion.ms", "MultipliersDebug.ms"};
+        final String[] debugArgs=new String[] {"-p","input_dir/part3","Processor.ms", "MultipliersDebug.ms"};
         run(debugArgs);
     }
 }
