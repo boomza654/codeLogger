@@ -15,6 +15,7 @@ For Minispec language with almost no debugging tool except printf's
    - Scope Entering and exiting
 - TODO: Create a real debugger from those output
 - TODO: Make a class that centralize Debug adding and real debugging
+- Doing right now: Bsc Translator (To be used with visualization tools)
 ## Usage
 - add `bin` and `lib/antlr-4.7.2-complete.jar` to class path
   - On window : `set CLASSPATH="%CLASSPATH%;bin;lib/antlr-4.7.2-complete.jar"`
