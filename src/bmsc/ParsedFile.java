@@ -1,7 +1,6 @@
-package translator;
+package bmsc;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -92,6 +91,7 @@ public class ParsedFile {
             importedParsedFiles.put(importName, outAlreadyParsedFileMap.get(importName));
         }
         currentParsedFile.imports=importedParsedFiles;
+        System.out.println("Finished Setting Import :"+ currentParsedFile.toString());
         outAlreadyParsedFileMap.put(fileName.substring(0,fileName.length()-3),currentParsedFile);
         outTopoSortedParsedFiles.add(0,currentParsedFile);
         

@@ -1,4 +1,4 @@
-package translator;
+package bmsc;
 
 import java.io.IOException;
 import java.util.*;
