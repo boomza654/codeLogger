@@ -1,6 +1,7 @@
 package bmsc;
 
 import java.util.*;
+import static bmsc.GeneralizedIdentifier.identifier;
 
 /**
  * Class for managing Scope/context/value/state of each  variable & its immutability & stuff
@@ -9,7 +10,7 @@ import java.util.*;
  * @author boomza654
  *
  */
-public class VariableManager {
+public class GeneralizedIdentifierManager {
     
     /**
      * 
@@ -21,7 +22,7 @@ public class VariableManager {
       // Uninitialized is handled by null
       VALID, // Initilized
       POSIONED, // Get reassigned from the scope inside (in a flow sensitive context)
-    };
+    }
     
     /**
      * 
@@ -43,17 +44,17 @@ public class VariableManager {
      * @author boomza654
      *
      */
-    public static class VariableContext{
-        public final Map<String,Variable> variablesMap;
+    public static class GeneralizedIdentifierContext{
+        public final Map<GeneralizedIdentifier,SemanticElement> identifierMap;
         public final boolean isMutableFromChildren;
         public final boolean isFlowSensitive;
         public final boolean isMethod;
         
-        public VariableContext(boolean isMutableFromChildren, boolean isFlowSensitive, boolean isMethod) {
+        public GeneralizedIdentifierContext(boolean isMutableFromChildren, boolean isFlowSensitive, boolean isMethod) {
             this.isMutableFromChildren=isMutableFromChildren;
             this.isFlowSensitive=isFlowSensitive;
             this.isMethod=isMethod;
-            this.variablesMap=new HashMap<>();
+            this.identifierMap=new HashMap<>();
         }
         
         @Override 
@@ -62,7 +63,7 @@ public class VariableManager {
                     + " isMutableFromChildren:"+isMutableFromChildren+" \n"
                     + " isFlowSensitive      :"+isFlowSensitive+" \n"
                     + " isMethod             :"+isMethod+" \n"
-                    + " variablesMap         :"+ variablesMap.toString()+">\n";
+                    + " identifierMap         :"+ identifierMap.toString()+">\n";
         }
         
     }
@@ -70,8 +71,8 @@ public class VariableManager {
     /**
      * Level of context
      */
-    public final List<VariableContext> contextLevels;
-    public VariableManager() {
+    public final List<GeneralizedIdentifierContext> contextLevels;
+    public GeneralizedIdentifierManager() {
         this.contextLevels=new ArrayList<>();
         this.enterImmutableLevel();
     }
@@ -80,13 +81,13 @@ public class VariableManager {
      * Scope Entering and Scope exiting  
      */
     
-    public void enterImmutableLevel() {this.contextLevels.add(new VariableContext(false, false,false));}
-    public void enterMutableLevel() {this.contextLevels.add(new VariableContext(true, false,false));}
-    public void enterMethodLevel() {this.contextLevels.add(new VariableContext(true, false, true));}
+    public void enterImmutableLevel() {this.contextLevels.add(new GeneralizedIdentifierContext(false, false,false));}
+    public void enterMutableLevel() {this.contextLevels.add(new GeneralizedIdentifierContext(true, false,false));}
+    public void enterMethodLevel() {this.contextLevels.add(new GeneralizedIdentifierContext(true, false, true));}
     /**
      * If/Case scope that is sensitive to flow
      */
-    public void enterFlowSensitiveLevel() {this.contextLevels.add(new VariableContext(true, true, false));}
+    public void enterFlowSensitiveLevel() {this.contextLevels.add(new GeneralizedIdentifierContext(true, true, false));}
     public void exitLevel() {
         assert (this.contextLevels.size()>1):"Gone out of outer most scope";
         this.contextLevels.remove(this.contextLevels.size()-1);
@@ -99,9 +100,9 @@ public class VariableManager {
      */
     public Variable getVar(String name) {
         for(int i=this.contextLevels.size()-1;i>=0;i--) {
-            Map<String,Variable> currentVaraiblesMap = this.contextLevels.get(i).variablesMap;
-            if(currentVaraiblesMap.containsKey(name))
-                return currentVaraiblesMap.get(name);
+            Map<GeneralizedIdentifier,SemanticElement> curIdMap = this.contextLevels.get(i).identifierMap;
+            if(curIdMap.containsKey(identifier(name)))
+                return (Variable)curIdMap.get(identifier(name));
         }
         return null;
     }
@@ -111,10 +112,10 @@ public class VariableManager {
      * @param type the type of varaibe
      * @return if the definition is succeful (Can involve shadowing)
      */
-    public boolean defineVar(String name, Type type) {
-        Map<String,Variable> currentVaraiblesMap = this.contextLevels.get(this.contextLevels.size()-1).variablesMap;
-        if(currentVaraiblesMap.containsKey(name)) return false;
-        currentVaraiblesMap.put(name, new Variable(type,name));
+    public boolean defineVar(Type type,String name) {
+        Map<GeneralizedIdentifier,SemanticElement> curIdMap = this.contextLevels.get(this.contextLevels.size()-1).identifierMap;
+        if(curIdMap.containsKey(identifier(name))) return false;
+        curIdMap.put(identifier(name), new Variable(type,name));
         return true;
     }
     
@@ -142,43 +143,43 @@ public class VariableManager {
     public boolean setVarInteger(String name, int value) {
         //Search in current Scope first : Always mutable
         int i=this.contextLevels.size()-1;
-        VariableContext currentVariableContext = this.contextLevels.get(i);
-        Map<String,Variable> currentVariablesMap = currentVariableContext.variablesMap;
-        if(currentVariablesMap.containsKey(name)) {
-            currentVariablesMap.get(name).value=value;
+        GeneralizedIdentifierContext curIdContext = this.contextLevels.get(i);
+        Map<GeneralizedIdentifier,SemanticElement> curIdMap = curIdContext.identifierMap;
+        if(curIdMap.containsKey(identifier(name))) {
+            ((Variable)curIdMap.get(identifier(name))).value=value;
             return true;
         }
         // Search Int Var from current scope Up
         Variable toMutate=null;
-        VariableContext toStorePoisonedVar = null; 
+        GeneralizedIdentifierContext toStorePoisonedVar = null; 
         /*
          * When Integer from outside is mutated in the flow sensitive scope
          * - the value outside gets "Posioned"
          * - the value is still valid inside the innermost poisoning scope 
          */
         for(i=this.contextLevels.size()-2;i>=0;i--) {
-            currentVariableContext = this.contextLevels.get(i);
+            curIdContext = this.contextLevels.get(i);
             // check mutability
-            if(!currentVariableContext.isMutableFromChildren) break;
+            if(!curIdContext.isMutableFromChildren) break;
             // Find variable that is integer
-            currentVariablesMap = currentVariableContext.variablesMap;
-            if(currentVariablesMap.containsKey(name)) {
-                if(currentVariablesMap.get(name).type.equals(SemanticElement.INTEGER_TYPE))
-                    toMutate=currentVariablesMap.get(name);
+            curIdMap = curIdContext.identifierMap;
+            if(curIdMap.containsKey(identifier(name))) {
+                if(((Variable)curIdMap.get(identifier(name))).type.equals(SemanticElement.INTEGER_TYPE))
+                    toMutate=(Variable)curIdMap.get(identifier(name));
                 break;
             }
             // Set poisoning if go out of the flow sensitive scope
-            if(currentVariableContext.isFlowSensitive && toStorePoisonedVar==null) {
-                toStorePoisonedVar=currentVariableContext;
+            if(curIdContext.isFlowSensitive && toStorePoisonedVar==null) {
+                toStorePoisonedVar=curIdContext;
             }
         }
         // Mutation
         if(toMutate==null) return false;
         if(toStorePoisonedVar!=null) {
-            assert !toStorePoisonedVar.variablesMap.containsKey(name): "poisoned leel also have the Integer ?A?A?";
+            assert !toStorePoisonedVar.identifierMap.containsKey(identifier(name)): "poisoned leel also have the Integer ?A?A?";
             toMutate.value=new IntegerData(0, IntegerState.POSIONED);
             toMutate= new Variable(SemanticElement.INTEGER_TYPE, toMutate.name);
-            toStorePoisonedVar.variablesMap.put(name, toMutate);
+            toStorePoisonedVar.identifierMap.put(identifier(name), toMutate);
         }
         toMutate.value= new IntegerData(value, IntegerState.VALID);
         return true;

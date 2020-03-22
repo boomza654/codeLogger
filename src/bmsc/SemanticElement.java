@@ -44,7 +44,7 @@ class Type implements SemanticElement{
     }
     @Override 
     public String toString() {
-        return this.typeId.toString();
+        return "<Type "+this.typeId.toString()+">";
     }
     @Override
     public boolean equals(Object other) {
@@ -121,7 +121,7 @@ class Variable implements SemanticElement{
     }
     @Override 
     public String toString() {
-        return name;
+        return "<Var "+type.toString()+" "+name+" = "+value.toString()+" >";
     }
     // no override of equals/ hashCode since the varaible need absolute equality
     
@@ -150,7 +150,7 @@ class Func implements SemanticElement {
     }
     @Override 
     public String toString() {
-        return funcId.toString();
+        return "<Func "+type.toString()+" "+funcId.toString()+" >";
     }
     @Override
     public boolean equals(Object other) {
@@ -184,7 +184,7 @@ class Parametric implements SemanticElement {
     }
     @Override 
     public String toString() {
-        return name.toString();
+        return "<Parametric "+name.toString()+">";
     }
     @Override
     public boolean equals(Object other) {
