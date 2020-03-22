@@ -1,4 +1,4 @@
-package datastructure;
+package stacktree;
 import java.util.*;
 
 /**
