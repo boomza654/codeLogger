@@ -39,33 +39,6 @@ public class VariableManager {
     }
     
     /**
-     * Represent the variable and what it stores
-     * @author boomza654
-     *
-     */
-    public static class Variable{
-        public final Type type;
-        public Object value;
-        
-        /**
-         * Create a variable with type t
-         * @param t
-         */
-        public Variable(Type t) {
-            this.type=t;
-            this.value=null;
-        }
-        /**
-         * 
-         * @return New Integer variable
-         */
-        public static Variable newIntVar() {return new Variable(Type.IntegerType());}
-        @Override
-        public String toString() {
-            return String.format("<%s:%s>", type,value);
-        }
-    }
-    /**
      * Define the Context (Set of Integers/Variable defined in each scope) + what th scope is
      * @author boomza654
      *
@@ -141,7 +114,7 @@ public class VariableManager {
     public boolean defineVar(String name, Type type) {
         Map<String,Variable> currentVaraiblesMap = this.contextLevels.get(this.contextLevels.size()-1).variablesMap;
         if(currentVaraiblesMap.containsKey(name)) return false;
-        currentVaraiblesMap.put(name, new Variable(type));
+        currentVaraiblesMap.put(name, new Variable(type,name));
         return true;
     }
     
@@ -155,7 +128,7 @@ public class VariableManager {
      */
     public boolean setVar(String name, Object value) {
         Variable var = getVar(name);
-        if(var==null || var.type.name.equals("Integer"))
+        if(var==null || var.type.equals(SemanticElement.INTEGER_TYPE))
             return false;
         var.value=value;
         return true;
@@ -190,7 +163,7 @@ public class VariableManager {
             // Find variable that is integer
             currentVariablesMap = currentVariableContext.variablesMap;
             if(currentVariablesMap.containsKey(name)) {
-                if(currentVariablesMap.get(name).type.name.equals("Integer"))
+                if(currentVariablesMap.get(name).type.equals(SemanticElement.INTEGER_TYPE))
                     toMutate=currentVariablesMap.get(name);
                 break;
             }
@@ -204,7 +177,7 @@ public class VariableManager {
         if(toStorePoisonedVar!=null) {
             assert !toStorePoisonedVar.variablesMap.containsKey(name): "poisoned leel also have the Integer ?A?A?";
             toMutate.value=new IntegerData(0, IntegerState.POSIONED);
-            toMutate= Variable.newIntVar();
+            toMutate= new Variable(SemanticElement.INTEGER_TYPE, toMutate.name);
             toStorePoisonedVar.variablesMap.put(name, toMutate);
         }
         toMutate.value= new IntegerData(value, IntegerState.VALID);

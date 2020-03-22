@@ -11,6 +11,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 public class CodeBuffer {
     public final StringBuilder code;
     public CodeBuffer() {code = new StringBuilder();}
+    public CodeBuffer(CodeBuffer other) {code = new StringBuilder(other.code.toString());}
     public void emit(String s) {code.append(s);}
     public void emit(boolean b) {emit(b?"True":"False");}
     public void emit(int x) {emit(x+"");}
