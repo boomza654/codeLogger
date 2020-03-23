@@ -215,7 +215,7 @@ public class GeneralizedIdentifierManager {
      * @return true if definition is successful false otherwise 
      */
     public boolean defineElement(GeneralizedIdentifier gid, SemanticElement e) {
-        if(getElement(gid)==null) return false;
+        if(getElement(gid)!=null) System.out.println("Warning: "+ gid + "Getting redefined as "+e);
         Map<GeneralizedIdentifier,SemanticElement> curGidMap = getCurrentGidMap();
         curGidMap.put(gid,e);
         return true;
@@ -278,7 +278,7 @@ public class GeneralizedIdentifierManager {
     public String toString() {
         String mapOut="";
         for(GeneralizedIdentifier id: identifierMap.keySet()) {
-            mapOut+= "    "+id.toString()+":"+identifierMap.get(id).toString()+"\n";
+            mapOut+= "    "+String.format("%-10s", id.toString())+":"+identifierMap.get(id).toString()+"\n";
         }
         return "< VariableContext\n"
                 + "  isMutableFromChildren:"+isMutableFromChildren+" \n"

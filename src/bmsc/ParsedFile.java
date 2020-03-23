@@ -93,7 +93,7 @@ public class ParsedFile {
         currentParsedFile.imports=importedParsedFiles;
         System.out.println("Finished Setting Import :"+ currentParsedFile.toString());
         outAlreadyParsedFileMap.put(fileName.substring(0,fileName.length()-3),currentParsedFile);
-        outTopoSortedParsedFiles.add(0,currentParsedFile);
+        outTopoSortedParsedFiles.add(currentParsedFile);
         
     }
     
@@ -116,7 +116,7 @@ public class ParsedFile {
      * 
      * @param startingFileName start parsing filename
      * @param path starting path
-     * @return list of all parsed files sorted in topological order (with the first one being the original file)
+     * @return list of all parsed files sorted in topological order (with the last one being the original file)
      * @throws IOException
      */
     public static List<ParsedFile> parseAndSortAllFilesStartingAt(String startingFileName, String path) throws IOException{

@@ -79,12 +79,20 @@ public class BluespecTranslator {
         }
         String fullInFileName = path+inFileName;
         String fullOutFileName= path+"out.bsv";
+        // Parse all file and its dependency
+        List<ParsedFile> parsedFiles = null;
         try {
-            Object x= (ParsedFile.parseAndSortAllFilesStartingAt(inFileName, path));
-            System.out.println(x);
+            parsedFiles= (ParsedFile.parseAndSortAllFilesStartingAt(inFileName, path));
         } catch( IOException e){
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
+        // Register all identifiers into the manager
+        GeneralizedIdentifierManager gidManager = new GeneralizedIdentifierManager();
+        for(ParsedFile parsedFile:parsedFiles) {
+            Elaborater.registerGidfromParsedFile(parsedFile, gidManager);
+        }
+        System.out.println(gidManager);
+        
     }
     /**
      * Run the program with given arg
