@@ -2,193 +2,291 @@ package bmsc;
 
 import java.util.*;
 import static bmsc.GeneralizedIdentifier.identifier;
+import stacktree.*;
+import static stacktree.StackTree.StackTreeNode;
 
 /**
- * Class for managing Scope/context/value/state of each  variable & its immutability & stuff
+ * Class for managing Scope/context/value/state of each variable/ type/ identifier and stuff & its immutability & stuff
  * 
- * This is similar to IntegerContext Class in the original translate.cpp
+ * This is similar to IntegerContext Class in the original translate.cpp but is built on totally different concept
+ * 
  * @author boomza654
  *
  */
 public class GeneralizedIdentifierManager {
     
-    /**
-     * 
-     * State of modifiability of Integer
-     * @author boomza654
-     *
-     */
-    public static enum IntegerState{
-      // Uninitialized is handled by null
-      VALID, // Initilized
-      POSIONED, // Get reassigned from the scope inside (in a flow sensitive context)
-    }
+
     
     /**
-     * 
-     * Data and State of Integer variable
-     * @author boomza654
-     *
+     * tree of context / scope
      */
-    public static class IntegerData{
-        public int value;
-        public IntegerState state;
-        public IntegerData(int value,IntegerState state) {
-            this.value=value;
-            this.state=state;
-        }
-    }
-    
-    /**
-     * Define the Context (Set of Integers/Variable defined in each scope) + what th scope is
-     * @author boomza654
-     *
-     */
-    public static class GeneralizedIdentifierContext{
-        public final Map<GeneralizedIdentifier,SemanticElement> identifierMap;
-        public final boolean isMutableFromChildren;
-        public final boolean isFlowSensitive;
-        public final boolean isMethod;
-        
-        public GeneralizedIdentifierContext(boolean isMutableFromChildren, boolean isFlowSensitive, boolean isMethod) {
-            this.isMutableFromChildren=isMutableFromChildren;
-            this.isFlowSensitive=isFlowSensitive;
-            this.isMethod=isMethod;
-            this.identifierMap=new HashMap<>();
-        }
-        
-        @Override 
-        public String toString() {
-            return "< VariableContext\n"
-                    + " isMutableFromChildren:"+isMutableFromChildren+" \n"
-                    + " isFlowSensitive      :"+isFlowSensitive+" \n"
-                    + " isMethod             :"+isMethod+" \n"
-                    + " identifierMap         :"+ identifierMap.toString()+">\n";
-        }
-        
-    }
-    
-    /**
-     * Level of context
-     */
-    public final List<GeneralizedIdentifierContext> contextLevels;
+    public final StackTree<GeneralizedIdentifierContext> contextTree;
     public GeneralizedIdentifierManager() {
-        this.contextLevels=new ArrayList<>();
-        this.enterImmutableLevel();
+        contextTree=new StackTree<>();
+        enterPrimitiveScope();
+        enterImmutableScope();
     }
     
-    /*
-     * Scope Entering and Scope exiting  
-     */
-    
-    public void enterImmutableLevel() {this.contextLevels.add(new GeneralizedIdentifierContext(false, false,false));}
-    public void enterMutableLevel() {this.contextLevels.add(new GeneralizedIdentifierContext(true, false,false));}
-    public void enterMethodLevel() {this.contextLevels.add(new GeneralizedIdentifierContext(true, false, true));}
     /**
-     * If/Case scope that is sensitive to flow
+     * Helper for assigning bluespec/primitive Types/fuc
      */
-    public void enterFlowSensitiveLevel() {this.contextLevels.add(new GeneralizedIdentifierContext(true, true, false));}
+    private static void addPrimitiveType(Map<GeneralizedIdentifier,SemanticElement> curGidMap, String s) {
+        curGidMap.put(identifier(s), new Type(identifier(s), null));
+    }
+    private static void addPrimitiveParametric(Map<GeneralizedIdentifier,SemanticElement> curGidMap, String s) {
+        curGidMap.put(identifier(s), new Parametric(s, null));
+    }
+    private static void addPrimitiveFunc(Map<GeneralizedIdentifier,SemanticElement> curGidMap, String s) {
+        curGidMap.put(identifier(s), new Func(null, identifier(s), null));
+    }
+
+    /**
+     * Set up Bluespec / Primitive Semantic Element
+     */
+    private void enterPrimitiveScope() {
+        // Primitive Type
+        GeneralizedIdentifierContext newContext = GeneralizedIdentifierContext.ImmutableContext();
+        Map<GeneralizedIdentifier,SemanticElement> curGidMap = newContext.identifierMap;
+        
+        /* All These Primitive Type needs different kind of treatment on its own*/
+        // Raw Type
+
+        addPrimitiveType(curGidMap,"Bool");// need support this
+        addPrimitiveType(curGidMap,"Integer");// need support this
+        addPrimitiveType(curGidMap,"String");// need support this
+        // Parametric Type
+        addPrimitiveParametric(curGidMap,"Bit");// need support this
+        addPrimitiveParametric(curGidMap,"Maybe");// need support this
+        addPrimitiveParametric(curGidMap,"Tuple2");
+        addPrimitiveParametric(curGidMap,"Tuple3");
+        addPrimitiveParametric(curGidMap,"Reg");// need support this
+        addPrimitiveParametric(curGidMap,"RegU");// need support this
+        addPrimitiveParametric(curGidMap,"Wire");
+        addPrimitiveParametric(curGidMap,"BypassWire");
+        addPrimitiveParametric(curGidMap,"DWire");
+        addPrimitiveParametric(curGidMap,"Vector");// need support this
+        // function
+        // to Bit Conversion 
+        addPrimitiveFunc(curGidMap,"pack");// need support this
+        addPrimitiveFunc(curGidMap,"unpack");// need support this
+        
+        
+        // function of Bit#(n) but does not require parametric use since these are bluespec syntax
+
+        addPrimitiveFunc(curGidMap,"zeroExtend");// need support this
+        addPrimitiveFunc(curGidMap,"signExtend");// need support this
+        addPrimitiveFunc(curGidMap,"truncate");// need support this
+        addPrimitiveFunc(curGidMap,"parity");// need support this
+        addPrimitiveFunc(curGidMap,"reverseBits");// need support this
+        addPrimitiveFunc(curGidMap,"truncateLSB");// need support this
+        
+        // Bool comparison function
+
+        addPrimitiveFunc(curGidMap,"signedLT");// need support this
+        addPrimitiveFunc(curGidMap,"signedGE");// need support this
+        //Maybe Type Tagged Union
+
+        addPrimitiveFunc(curGidMap,"Valid");// need support this
+        addPrimitiveFunc(curGidMap,"Invalid");// need support this
+        addPrimitiveFunc(curGidMap,"isValid");// need support this
+        addPrimitiveFunc(curGidMap,"fromMaybe");// need support this
+
+        //Tuple related
+
+        addPrimitiveFunc(curGidMap,"tuple2");
+        addPrimitiveFunc(curGidMap,"tuple3");
+        addPrimitiveFunc(curGidMap,"tpl_1");
+        addPrimitiveFunc(curGidMap,"tpl_2");
+        addPrimitiveFunc(curGidMap,"tpl_3");
+        
+        //Vector / List function
+
+        addPrimitiveFunc(curGidMap,"newVector");
+        addPrimitiveFunc(curGidMap,"genVector");
+        addPrimitiveFunc(curGidMap,"replicate");
+        addPrimitiveFunc(curGidMap,"cons");
+        addPrimitiveFunc(curGidMap,"nil");
+        addPrimitiveFunc(curGidMap,"concat");
+        addPrimitiveFunc(curGidMap,"append");
+        addPrimitiveFunc(curGidMap,"select");
+        addPrimitiveFunc(curGidMap,"update");
+        addPrimitiveFunc(curGidMap,"head");
+        addPrimitiveFunc(curGidMap,"last");
+        addPrimitiveFunc(curGidMap,"tail");
+        addPrimitiveFunc(curGidMap,"init");
+        addPrimitiveFunc(curGidMap,"take");
+        addPrimitiveFunc(curGidMap,"takeTail");
+        addPrimitiveFunc(curGidMap,"drop");
+        addPrimitiveFunc(curGidMap,"takeAt");
+        addPrimitiveFunc(curGidMap,"rotate");
+        addPrimitiveFunc(curGidMap,"rotateR");
+        addPrimitiveFunc(curGidMap,"rotateBy");
+        addPrimitiveFunc(curGidMap,"shiftInAt0");
+        addPrimitiveFunc(curGidMap,"shiftInAtN");
+        addPrimitiveFunc(curGidMap,"shiftOutFrom0");
+        addPrimitiveFunc(curGidMap,"shiftOutFromN");
+        addPrimitiveFunc(curGidMap,"reverse");
+        addPrimitiveFunc(curGidMap,"transpose");
+        addPrimitiveFunc(curGidMap,"transposeLN");
+        addPrimitiveFunc(curGidMap,"elem");
+        addPrimitiveFunc(curGidMap,"any");
+        addPrimitiveFunc(curGidMap,"all");
+        addPrimitiveFunc(curGidMap,"or");
+        addPrimitiveFunc(curGidMap,"and");
+        // Combining vector into vector of tuple
+
+        addPrimitiveFunc(curGidMap,"zip");
+        addPrimitiveFunc(curGidMap,"zip3");
+        addPrimitiveFunc(curGidMap,"unzip");
+        
+        // display and multip
+        addPrimitiveFunc(curGidMap,"$display");
+        addPrimitiveFunc(curGidMap,"$write");
+        addPrimitiveFunc(curGidMap,"$finish");
+        addPrimitiveFunc(curGidMap,"fshow");
+        
+        
+        contextTree.push(newContext);
+    }
+
+    
+    public void enterImmutableScope() {
+        GeneralizedIdentifierContext newContext = GeneralizedIdentifierContext.ImmutableContext();
+        contextTree.push(newContext);
+    }
+    public void enterMutableScope() {
+        GeneralizedIdentifierContext newContext = GeneralizedIdentifierContext.MutableContext();
+        contextTree.push(newContext);
+    }
+    public void enterMethodScope() {
+        GeneralizedIdentifierContext newContext = GeneralizedIdentifierContext.MethodContext();
+        contextTree.push(newContext);
+    }
+    public void enterBranchScope() {
+        GeneralizedIdentifierContext newContext = GeneralizedIdentifierContext.FlowSensitiveContext();
+        contextTree.push(newContext);
+    }
+    /**
+     * Clean up the branching Scope
+     */
+    public void mergeBranchScopes() {
+        
+    }
+    /**
+     * Exit the Scope if the durrent scope is not a branch scope or outer most scope
+     * - if not a brnach scope then also delete context
+     * - else maintain the context and just move up
+     */
     public void exitLevel() {
-        assert (this.contextLevels.size()>1):"Gone out of outer most scope";
-        this.contextLevels.remove(this.contextLevels.size()-1);
+        assert contextTree.curNode!=contextTree.root: "Error context tree reach root";
+        if(!contextTree.get().isFlowSensitive)
+            contextTree.pop();
+        else
+            contextTree.traverseUp();
     }
     
+
     /**
-     * Get the variable startgin from the innermost context
-     * @param name of the variable to find
-     * @return the Variable object (or null if nothing is found)
+     * Find the semantic element of gid 
+     * @param gid the generalized identifier of the element to find
+     * @return the pointer to Semantic Element (directly change it will of course affect the thing) or nul if not found
+     *          Please avoid changing the value directly
      */
-    public Variable getVar(String name) {
-        for(int i=this.contextLevels.size()-1;i>=0;i--) {
-            Map<GeneralizedIdentifier,SemanticElement> curIdMap = this.contextLevels.get(i).identifierMap;
-            if(curIdMap.containsKey(identifier(name)))
-                return (Variable)curIdMap.get(identifier(name));
-        }
-        return null;
-    }
-    /**
-     * Define variable in the innermost scope
-     * @param name the variable name
-     * @param type the type of varaibe
-     * @return if the definition is succeful (Can involve shadowing)
-     */
-    public boolean defineVar(Type type,String name) {
-        Map<GeneralizedIdentifier,SemanticElement> curIdMap = this.contextLevels.get(this.contextLevels.size()-1).identifierMap;
-        if(curIdMap.containsKey(identifier(name))) return false;
-        curIdMap.put(identifier(name), new Variable(type,name));
-        return true;
-    }
-    
-    
-    
-    /**
-     * Set Varaible(non Integer)'s value from within the inner most scope
-     * @param name varaible name to set
-     * @param value Value to set
-     * @return whether the setting is successful or not
-     */
-    public boolean setVar(String name, Object value) {
-        Variable var = getVar(name);
-        if(var==null || var.type.equals(SemanticElement.INTEGER_TYPE))
-            return false;
-        var.value=value;
-        return true;
-    }
-    /**
-     * Set Varaible(Integer)'s value from within the inner most scope
-     * @param name varaible name to set
-     * @param value Value to set
-     * @return whether the setting is successful or not
-     */
-    public boolean setVarInteger(String name, int value) {
-        //Search in current Scope first : Always mutable
-        int i=this.contextLevels.size()-1;
-        GeneralizedIdentifierContext curIdContext = this.contextLevels.get(i);
-        Map<GeneralizedIdentifier,SemanticElement> curIdMap = curIdContext.identifierMap;
-        if(curIdMap.containsKey(identifier(name))) {
-            ((Variable)curIdMap.get(identifier(name))).value=value;
-            return true;
-        }
-        // Search Int Var from current scope Up
-        Variable toMutate=null;
-        GeneralizedIdentifierContext toStorePoisonedVar = null; 
-        /*
-         * When Integer from outside is mutated in the flow sensitive scope
-         * - the value outside gets "Posioned"
-         * - the value is still valid inside the innermost poisoning scope 
-         */
-        for(i=this.contextLevels.size()-2;i>=0;i--) {
-            curIdContext = this.contextLevels.get(i);
-            // check mutability
-            if(!curIdContext.isMutableFromChildren) break;
-            // Find variable that is integer
-            curIdMap = curIdContext.identifierMap;
-            if(curIdMap.containsKey(identifier(name))) {
-                if(((Variable)curIdMap.get(identifier(name))).type.equals(SemanticElement.INTEGER_TYPE))
-                    toMutate=(Variable)curIdMap.get(identifier(name));
+    public SemanticElement getElement(GeneralizedIdentifier gid) {
+        StackTreeNode<GeneralizedIdentifierContext> savedPointer = contextTree.curNode;
+        SemanticElement result = null;
+        while(contextTree.curNode!=contextTree.root) {
+            Map<GeneralizedIdentifier,SemanticElement> curGidMap = getCurrentGidMap();
+            if(curGidMap.containsKey(gid)){
+                result=curGidMap.get(gid);
                 break;
             }
-            // Set poisoning if go out of the flow sensitive scope
-            if(curIdContext.isFlowSensitive && toStorePoisonedVar==null) {
-                toStorePoisonedVar=curIdContext;
-            }
+            contextTree.traverseUp();
         }
-        // Mutation
-        if(toMutate==null) return false;
-        if(toStorePoisonedVar!=null) {
-            assert !toStorePoisonedVar.identifierMap.containsKey(identifier(name)): "poisoned leel also have the Integer ?A?A?";
-            toMutate.value=new IntegerData(0, IntegerState.POSIONED);
-            toMutate= new Variable(SemanticElement.INTEGER_TYPE, toMutate.name);
-            toStorePoisonedVar.identifierMap.put(identifier(name), toMutate);
-        }
-        toMutate.value= new IntegerData(value, IntegerState.VALID);
-        return true;
-        
+        // restire curNode
+        contextTree.curNode=savedPointer;
+        return result;
     }
+    
+    /**
+     * Try defining the Semantic Element in the current Scope
+     * @param gid the Generalized Identifier to be defined
+     * @param e the SemantocElement of it
+     * @return true if definition is successful false otherwise 
+     */
+    public boolean defineElement(GeneralizedIdentifier gid, SemanticElement e) {
+        if(getElement(gid)==null) return false;
+        Map<GeneralizedIdentifier,SemanticElement> curGidMap = getCurrentGidMap();
+        curGidMap.put(gid,e);
+        return true;
+    }
+    /**
+     * 
+     * @return the GidentifierMap of where the curNode is
+     */
+    private Map<GeneralizedIdentifier,SemanticElement> getCurrentGidMap(){
+        GeneralizedIdentifierContext curContext = contextTree.get();
+        assert curContext!=null : "Error curContext is null";
+        Map<GeneralizedIdentifier,SemanticElement> curGidMap = curContext.identifierMap;
+        return curGidMap;
+    }
+//
+//    public boolean setElement(GeneralizedIdentifier gid, SemanticElement e) {}
+
     
     @Override
     public String toString() {
-        return this.contextLevels.toString();
+        return this.contextTree.toString();
+    }
+    
+    public static void main(String[] args) {
+        GeneralizedIdentifierManager manager = new GeneralizedIdentifierManager();
+        System.out.println(manager);
+    }
+    
+}
+
+
+
+/**
+ * Define the Context (Set of Integers/Variable defined in each scope) + what th scope is
+ * @author boomza654
+ *
+ */
+ class GeneralizedIdentifierContext{
+    public final Map<GeneralizedIdentifier,SemanticElement> identifierMap;
+    // mark that the context contains variable that can be set from children scope
+    public final boolean isMutableFromChildren;
+    // mark that current context is Flow sensitive context , cannot be exited lightly (need to have proper merged)
+    public final boolean isFlowSensitive; 
+    // Mark that current context is a method (Just disallow register write and sub module wire in )
+    public final boolean isMethod;
+    
+    public static GeneralizedIdentifierContext ImmutableContext() {return new GeneralizedIdentifierContext(false, false, false);}
+    public static GeneralizedIdentifierContext MutableContext() {return new GeneralizedIdentifierContext(true, false, false);}
+    public static GeneralizedIdentifierContext MethodContext() {return new GeneralizedIdentifierContext(true, false, true);}
+    public static GeneralizedIdentifierContext FlowSensitiveContext() {return new GeneralizedIdentifierContext(true, true, true);}
+    
+    public GeneralizedIdentifierContext(boolean isMutableFromChildren, boolean isFlowSensitive, boolean isMethod) {
+        this.isMutableFromChildren=isMutableFromChildren;
+        this.isFlowSensitive=isFlowSensitive;
+        this.isMethod=isMethod;
+        this.identifierMap=new HashMap<>();
+    }
+    
+    @Override 
+    public String toString() {
+        String mapOut="";
+        for(GeneralizedIdentifier id: identifierMap.keySet()) {
+            mapOut+= "    "+id.toString()+":"+identifierMap.get(id).toString()+"\n";
+        }
+        return "< VariableContext\n"
+                + "  isMutableFromChildren:"+isMutableFromChildren+" \n"
+                + "  isFlowSensitive      :"+isFlowSensitive+" \n"
+                + "  isMethod             :"+isMethod+" \n"
+                + "  identifierMap        :\n"
+                + mapOut
+                +">\n";
     }
     
 }

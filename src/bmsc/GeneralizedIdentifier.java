@@ -1,6 +1,6 @@
 package bmsc;
 
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -22,6 +22,7 @@ public class GeneralizedIdentifier {
         this.name=other.name;
         this.params= List.copyOf(other.params);
     }
+ 
     
     public static GeneralizedIdentifier identifier(String name) {   return new GeneralizedIdentifier(name, List.of()); }
     @Override
@@ -33,7 +34,7 @@ public class GeneralizedIdentifier {
     @Override
     public String toString() {
         List<String> paramStrings= params.stream().map((s)->s.toString()).collect(Collectors.toList());
-        return name+"#("+String.join(",", paramStrings)+")";
+        return name+(paramStrings.isEmpty()?"":"#("+String.join(",", paramStrings)+")");
     }
     @Override public int hashCode() {
         return name.hashCode()+params.hashCode();

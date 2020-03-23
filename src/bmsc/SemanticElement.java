@@ -15,8 +15,10 @@ import java.util.stream.Collectors;
  *
  */
 public interface SemanticElement {
-    
-   public static final Type INTEGER_TYPE = new Type(GeneralizedIdentifier.identifier("Integer"),null);
+   
+
+    public static final Type INTEGER_TYPE = new Type(GeneralizedIdentifier.identifier("Integer"),null);
+    public static Variable IntegerVar(String name) {return new Variable(INTEGER_TYPE, name);}
 }
 
 /**
@@ -59,6 +61,7 @@ class Type implements SemanticElement{
     public String toStringEscapeParametric() {
         return this.typeId.toStringEscapeParametric();
     }
+
     
 }
 
@@ -97,6 +100,7 @@ class FuncType {
     public int hashCode() {
         return this.returnType.hashCode()+this.argTypes.hashCode();
     }
+
 }
 
 /**
@@ -123,6 +127,7 @@ class Variable implements SemanticElement{
     public String toString() {
         return "<Var "+type.toString()+" "+name+" = "+value.toString()+" >";
     }
+
     // no override of equals/ hashCode since the varaible need absolute equality
     
 }
@@ -150,7 +155,7 @@ class Func implements SemanticElement {
     }
     @Override 
     public String toString() {
-        return "<Func "+type.toString()+" "+funcId.toString()+" >";
+        return "<Func "+(type!=null?type.toString():"null")+" "+funcId.toString()+" >";
     }
     @Override
     public boolean equals(Object other) {

@@ -11,6 +11,8 @@ public class Utility {
      * 
      * With super slow + greedy algo replacement
      * single pass from the front found string => replace
+     * 
+     * <B>DEPRECATED: Please use string.replaceAll instead</b>
      * @param in the input string to replace
      * @param find  substring to find
      * @param toReplace substring to replace the found with
@@ -39,7 +41,7 @@ public class Utility {
      * @throws NumberFormatException if the parsing is wrong
      */
     public static int getValueMinispecIntLiteral(String in) {
-        in=stringReplace(in, "_", ""); // replace things first
+        in=in.replaceAll("_", ""); // replace things first
         if(in.indexOf("'")==-1) {
             return Integer.parseInt(in);
         }
