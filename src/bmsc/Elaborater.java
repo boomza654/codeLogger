@@ -27,62 +27,114 @@ public class Elaborater {
             // Register typedef
             if(defNode.typeDecl()!=null) {
                 TypeDeclContext typeDefNode = defNode.typeDecl();
-                GeneralizedIdentifier newGid=null;
-                SemanticElement definition=null;
-                // REgister Synonym typedef
                 if(typeDefNode.typeDefSynonym()!=null) {
-                    // Check if the type is parametric
                     TypeDefSynonymContext typeDefSynNode = typeDefNode.typeDefSynonym();
-                    boolean isParametric = isTypeIdNodeParametric(typeDefSynNode.typeId(), gidManager);
-                    if(isParametric) {
-                        String name =typeDefSynNode.typeId().name.getText();
-                        newGid= identifier(name);
-                        definition= new Parametric(name,typeDefSynNode);
-                    } else {
-                        newGid = extractGidFromTypeIdNode(typeDefSynNode.typeId(), gidManager);
-                        definition = new Type(newGid,extractGidFromTypeNode(typeDefSynNode.type(), gidManager));
-                    }
+                    registerGidFromTypeDefSynNode(typeDefSynNode, gidManager);
+                    
                 } else if (typeDefNode.typeDefEnum()!=null) {
                     TypeDefEnumContext typeDefEnumNode = typeDefNode.typeDefEnum();
-                    String name = typeDefEnumNode.upperCaseIdentifier().getText();
-                    newGid = identifier(name);
-                    Type newEnumType = new Type(newGid, typeDefEnumNode);
-                    definition =newEnumType;
-                    // register each value of enum
-                    int curEnumInt=0;
-                    for(TypeDefEnumElementContext element: typeDefEnumNode.typeDefEnumElement()) {
-                        String varName= element.upperCaseIdentifier().getText();
-                        Integer value=null;
-                        if(element.tagval!=null) {
-                            value = Utility.getValueMinispecIntLiteral(element.tagval.getText());
-                            curEnumInt= value.intValue()+1; // TODO: Change this to assigning Bit value to each enum instead
-                        } else {
-                            value= curEnumInt;
-                            curEnumInt++;
-                        }
-                        Variable newEnumVar = new Variable(newEnumType,name);
-                        newEnumVar.value=value;
-                        gidManager.defineElement(identifier(varName), newEnumVar);
-                    }
+                    registerGidFromTypeDefEnumNode(typeDefEnumNode, gidManager);
+                    
                 } else if (typeDefNode.typeDefStruct()!=null) {
                     TypeDefStructContext typeDefStructNode = typeDefNode.typeDefStruct();
-                    boolean isParametric = isTypeIdNodeParametric(typeDefStructNode.typeId(), gidManager);
-                    if(isParametric) {
-                        String name =typeDefStructNode.typeId().name.getText();
-                        newGid= identifier(name);
-                        definition= new Parametric(name,typeDefStructNode);
-                    } else {
-                        newGid = extractGidFromTypeIdNode(typeDefStructNode.typeId(), gidManager);
-                        definition = new Type(newGid,typeDefStructNode);
-                    }
+                    registerGidFromTypeDefStructNode(typeDefStructNode, gidManager);
+                   
                 } else {
                     throw new RuntimeException ("WTF Error when encounter node typeDef: \n "+ typeDefNode.getText());
                 }
-                if(newGid!=null && definition!=null)
-                gidManager.defineElement(newGid, definition);
-                
+            } else if (defNode.varDecl()!=null) {
+                VarDeclContext varDeclNode = defNode.varDecl();
+                if(varDeclNode instanceof VarBindingContext) {
+                    registerGidFromVarBindingNode((VarBindingContext)varDeclNode, gidManager);
+                } else if (varDeclNode instanceof LetBindingContext) {
+                    registerGidFromLetBindingNode((LetBindingContext)varDeclNode, gidManager);
+                } else {
+                    throw new RuntimeException ("WTF Error when encounter node typeDef: \n "+ varDeclNode.getText());
+                }
             }
         }
+    }
+    /**
+     * Register Type Def GID
+     * @param typeDefSynNode parse node
+     * @param gidManager to regsiter
+     */
+    public static void registerGidFromTypeDefSynNode (TypeDefSynonymContext typeDefSynNode , GeneralizedIdentifierManager gidManager) {
+        GeneralizedIdentifier newGid=null;
+        SemanticElement definition=null;
+        boolean isParametric = isTypeIdNodeParametric(typeDefSynNode.typeId(), gidManager);
+        if(isParametric) {
+            String name =typeDefSynNode.typeId().name.getText();
+            newGid= identifier(name);
+            definition= new Parametric(name,typeDefSynNode);
+        } else {
+            newGid = extractGidFromTypeIdNode(typeDefSynNode.typeId(), gidManager);
+            definition = new Type(newGid,extractGidFromTypeNode(typeDefSynNode.type(), gidManager));
+        }
+        gidManager.defineVar(newGid, definition);
+    }
+    /**
+     * Register Gid From Tyep Def Enum node
+     * @param typeDefEnumNode parsed node
+     * @param gidManager to register
+     */
+    public static void registerGidFromTypeDefEnumNode (TypeDefEnumContext typeDefEnumNode, GeneralizedIdentifierManager gidManager) {
+
+        String name = typeDefEnumNode.upperCaseIdentifier().getText();
+        GeneralizedIdentifier newGid= identifier(name);
+        Type newEnumType = new Type(newGid, typeDefEnumNode);
+        gidManager.defineVar(newGid, newEnumType);
+        // register each value of enum
+        int curEnumInt=0;
+        for(TypeDefEnumElementContext element: typeDefEnumNode.typeDefEnumElement()) {
+            String varName= element.upperCaseIdentifier().getText();
+            Integer value=null;
+            if(element.tagval!=null) {
+                value = Utility.getValueMinispecIntLiteral(element.tagval.getText());
+                curEnumInt= value.intValue()+1; // TODO: Change this to assigning Bit value to each enum instead
+            } else {
+                value= curEnumInt;
+                curEnumInt++;
+            }
+            Variable newEnumVar = new Variable(newEnumType,name);
+            newEnumVar.value=value;
+            gidManager.defineVar(identifier(varName), newEnumVar);
+        }
+    }
+    /**
+     * register Gid From Tpedef STruct node
+     * @param typeDefStructNode parsed node
+     * @param gidManager to regisster
+     */
+    public static void registerGidFromTypeDefStructNode (TypeDefStructContext typeDefStructNode, GeneralizedIdentifierManager gidManager) {
+        GeneralizedIdentifier newGid=null;
+        SemanticElement definition=null;
+        boolean isParametric = isTypeIdNodeParametric(typeDefStructNode.typeId(), gidManager);
+        if(isParametric) {
+            String name =typeDefStructNode.typeId().name.getText();
+            newGid= identifier(name);
+            definition= new Parametric(name,typeDefStructNode);
+        } else {
+            newGid = extractGidFromTypeIdNode(typeDefStructNode.typeId(), gidManager);
+            definition = new Type(newGid,typeDefStructNode);
+        }
+        gidManager.defineVar(newGid, definition);
+    }
+    /**
+     * register Gid from var declaration
+     * @param varBindingNode
+     * @param gidManager
+     */
+    public static void registerGidFromVarBindingNode(VarBindingContext varBindingNode , GeneralizedIdentifierManager gidManager) {
+        
+    }
+    /**
+     * register Gid from let declaration
+     * @param letBindingNode
+     * @param gidManager
+     */
+    public static void registerGidFromLetBindingNode(LetBindingContext letBindingNode , GeneralizedIdentifierManager gidManager) {
+        
     }
     
     /**
@@ -153,7 +205,7 @@ public class Elaborater {
      * 
      * @param exprNode
      * @param gidManager
-     * @return
+     * @return evaluated expression exprNode
      */
     public static Object evaluateExpressionNode(ExpressionContext exprNode, GeneralizedIdentifierManager gidManager) {
         // Fake expressino evaluation
