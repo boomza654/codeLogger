@@ -10,7 +10,7 @@ import java.util.*;
  *
  */
 public class BluespecTranslator {
-    
+   
     public static void showHelp() {
         final String helpMessage = "usage: [option] input_filename topmodule \n\n" + 
                 "Result : Will translate top_module of file_name in ms into synthesizable bsv \n\n"+
@@ -89,9 +89,16 @@ public class BluespecTranslator {
         // Register all identifiers into the manager
         GeneralizedIdentifierManager gidManager = new GeneralizedIdentifierManager();
         for(ParsedFile parsedFile:parsedFiles) {
-            Elaborater.registerGidfromParsedFile(parsedFile, gidManager);
+            System.out.println("Start Registering Types/Functions/Parametrics in file: "+ parsedFile.fileName);
+            Elaborater.firstPassGidRegister(parsedFile, gidManager);
         }
+        System.out.println("Finish Registering Types/functions/Parametrics");
         System.out.println(gidManager);
+        Translator translator = new Translator(gidManager);
+        for(GeneralizedIdentifier gid: gidManager.scopeTree.get().typeMap.keyList()) { // get all outer most types
+            String code=translator.translateType(gid);
+            System.out.println(code);
+        }
         
     }
     /**

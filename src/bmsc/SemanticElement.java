@@ -1,7 +1,6 @@
 package bmsc;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 /**
@@ -34,7 +33,7 @@ public interface SemanticElement {
  */
 class Type implements SemanticElement{
     public final GeneralizedIdentifier typeId;
-    public final Object definition; // most likely going to be the ParseTree node that define the whole thing
+    public Object definition; // most likely going to be the ParseTree node that define the whole thing
     
     public Type(GeneralizedIdentifier typeId, Object definition) {
         this.typeId=typeId;
@@ -67,41 +66,7 @@ class Type implements SemanticElement{
 
 
 
-/**
- * 
- * Immutable Represent a type of a solid function/ method in minispec
- * - map from value Type to value Type
- * @author boomza654
- *
- */
-class FuncType {
-    public final Type returnType;
-    public final List<Type> argTypes;
-    public FuncType(Type returnType, List<Type> argTypes) {
-        this.returnType=returnType;
-        this.argTypes=List.copyOf(argTypes);
-    }
-    public FuncType(FuncType other) {
-        this.returnType=other.returnType;
-        this.argTypes=List.copyOf(other.argTypes);
-    }
-    @Override 
-    public String toString() {
-        List<String> argTypeStrings= argTypes.stream().map((s)->s.toString()).collect(Collectors.toList());
-        return returnType.toString()+"("+String.join(",", argTypeStrings)+")";
-    }
-    @Override
-    public boolean equals(Object other) {
-        if(!(other instanceof FuncType)) return false;
-        FuncType that = (FuncType) other;
-        return this.returnType.equals(that.returnType) && this.argTypes.equals(that.argTypes);
-    }
-    @Override
-    public int hashCode() {
-        return this.returnType.hashCode()+this.argTypes.hashCode();
-    }
 
-}
 
 /**
  * Mutable
@@ -140,32 +105,29 @@ class Variable implements SemanticElement{
  *
  */
 class Func implements SemanticElement {
-    public final FuncType type;
     public final GeneralizedIdentifier funcId;
-    public final Object code;
-    public Func(FuncType type, GeneralizedIdentifier funcId, Object code) {
-        this.type=type;
+    public Object definition;
+    public Func( GeneralizedIdentifier funcId, Object definition) {
         this.funcId=funcId;
-        this.code=code;
+        this.definition=definition;
     }
     public Func(Func other) {
-        this.type=other.type;
         this.funcId=other.funcId;
-        this.code=other.code;
+        this.definition=other.definition;
     }
     @Override 
     public String toString() {
-        return "<Func "+(type!=null?type.toString():"null")+" "+funcId.toString()+" >";
+        return "<Func "+funcId.toString()+" >";
     }
     @Override
     public boolean equals(Object other) {
         if(!(other instanceof Func)) return false;
         Func that = (Func) other;
-        return this.type.equals(that.type) && this.funcId.equals(that.funcId);
+        return  this.funcId.equals(that.funcId);
     }
     @Override
     public int hashCode() {
-        return this.type.hashCode()+this.funcId.hashCode();
+        return this.funcId.hashCode();
     }
 }
 /**
@@ -177,7 +139,7 @@ class Func implements SemanticElement {
  */
 class Parametric implements SemanticElement {
     public final String name;
-    public final Object definition;
+    public Object definition;
     
     public Parametric(String name, Object definition) {
         this.name =name;

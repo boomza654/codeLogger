@@ -91,7 +91,7 @@ public class ParsedFile {
             importedParsedFiles.put(importName, outAlreadyParsedFileMap.get(importName));
         }
         currentParsedFile.imports=importedParsedFiles;
-        System.out.println("Finished Setting Import :"+ currentParsedFile.toString());
+        //System.out.println("Finished Setting Import :"+ currentParsedFile.toString());
         outAlreadyParsedFileMap.put(fileName.substring(0,fileName.length()-3),currentParsedFile);
         outTopoSortedParsedFiles.add(currentParsedFile);
         

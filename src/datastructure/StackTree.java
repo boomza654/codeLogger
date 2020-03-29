@@ -1,4 +1,4 @@
-package stacktree;
+package datastructure;
 import java.util.*;
 import java.util.stream.Collectors;
 

@@ -1,9 +1,11 @@
 package bmsc;
 
 import java.util.*;
+
+import datastructure.*;
+
 import static bmsc.GeneralizedIdentifier.identifier;
-import stacktree.*;
-import static stacktree.StackTree.StackTreeNode;
+import static datastructure.StackTree.StackTreeNode;
 
 /**
  * Class for managing Scope/context/value/state of each variable/ type/ identifier and stuff & its immutability & stuff
@@ -22,13 +24,12 @@ public class GeneralizedIdentifierManager {
      */
     public final StackTree<Scope> scopeTree;
     // at first plan to re write Bluespec type checking system as well, but figure out it is too much to do in 2 weeks
-    public final Map<GeneralizedIdentifier,Func> funcMap;
-    public final Map<GeneralizedIdentifier,Type> typeMap;
+    public final FIFOMap<GeneralizedIdentifier,Func> funcMap;
+    //public final FIFOMap<GeneralizedIdentifier,Type> typeMap;
     public final Map<String, Parametric> parametricMap;
     public GeneralizedIdentifierManager() {
         scopeTree=new StackTree<>();
-        funcMap= new HashMap<>();
-        typeMap= new HashMap<>();
+        funcMap= new FIFOMap<>();
         parametricMap= new HashMap<>();
         //setupPrimitives();
         enterImmutableScope();
@@ -308,15 +309,48 @@ public class GeneralizedIdentifierManager {
      * @return true if definition is successful false otherwise 
      */
     public boolean defineType(GeneralizedIdentifier typeGid, Type e) {
-        if(typeMap.containsKey(typeGid)) {System.out.println("Error the type "+typeGid+" is already defined"); return false;}
-        typeMap.put(typeGid,e);
+        if(getType(typeGid)!=null) {
+            System.out.println("Error: "+ typeGid + " is already defined can't redefined ");
+            return false;
+        }
+        Map<GeneralizedIdentifier,Type> curGidMap = scopeTree.get().typeMap;
+        curGidMap.put(typeGid,e);
         return true;
+    }
+    /**
+     * Try to define type at the outermost scope regardless of what scope ucrrently in
+     * @param typeGid
+     * @param e
+     * @return true if definition is successful false otherwise 
+     */
+    public boolean defineTypeAtTop(GeneralizedIdentifier typeGid, Type e) {
+
+        StackTreeNode<Scope> savedPointer = scopeTree.curNode;
+        scopeTree.curNode=scopeTree.root.children.get(0); // go to outer most scope
+        boolean result = defineType(typeGid, e);
+        scopeTree.curNode=savedPointer; // go back to current scope
+        return result;
+        
     }
     /**
      * @param typeGid
      * @return Type object or nul if not found
      */
-    public Type getType(GeneralizedIdentifier typeGid) { return typeMap.getOrDefault(typeGid, null);}
+    public Type getType(GeneralizedIdentifier typeGid) {
+        StackTreeNode<Scope> savedPointer = scopeTree.curNode;
+        Type result = null;
+        while(scopeTree.curNode!=scopeTree.root) {
+            Map<GeneralizedIdentifier,Type> curGidMap = scopeTree.get().typeMap;
+            if(curGidMap.containsKey(typeGid)){
+                result=curGidMap.get(typeGid);
+                break;
+            }
+            scopeTree.traverseUp();
+        }
+        // restire curNode
+        scopeTree.curNode=savedPointer;
+        return result;
+    }
     
     /**
      * Try defining the Parametric defintion
@@ -351,7 +385,11 @@ public class GeneralizedIdentifierManager {
     
     @Override
     public String toString() {
-        return this.scopeTree.toString();
+        
+        return "funcMap:" + this.funcMap+"\n"+
+                "paraMap:"+this.parametricMap+"\n"+
+                "Scope:\n"+
+                this.scopeTree.toString();
     }
     
     public static void main(String[] args) {
@@ -369,7 +407,8 @@ public class GeneralizedIdentifierManager {
  *
  */
  class Scope{
-    public final Map<String,Variable> variableMap;
+    public final FIFOMap<String,Variable> variableMap;
+    public final FIFOMap<GeneralizedIdentifier,Type> typeMap;
     // mark that the context contains variable that can be set from children scope
     public final boolean isMutableFromChildren;
     // mark that current context is Flow sensitive context , cannot be exited lightly (need to have proper merged)
@@ -386,21 +425,30 @@ public class GeneralizedIdentifierManager {
         this.isMutableFromChildren=isMutableFromChildren;
         this.isFlowSensitive=isFlowSensitive;
         this.isMethod=isMethod;
-        this.variableMap=new HashMap<>();
+        this.variableMap=new FIFOMap<>();
+        this.typeMap= new FIFOMap<>();
     }
     
     @Override 
     public String toString() {
-        String mapOut="";
-        for(String id: variableMap.keySet()) {
-            mapOut+= "    "+String.format("%-10s", id.toString())+":"+variableMap.get(id).toString()+"\n";
+        String varMapOut="";
+        String typeMapOut="";
+        for(String id: variableMap.keyList()) {
+            varMapOut+= "    "+String.format("%-10s", id.toString())+":"+variableMap.get(id).toString()+"\n";
         }
+        for(GeneralizedIdentifier gid: typeMap.keyList()) {
+            typeMapOut+="    "+String.format("%-10s", gid.toString())+":"+typeMap.get(gid).toString()+"\n";
+        
+        }
+        
         return "< Scope\n"
                 + "  isMutableFromChildren:"+isMutableFromChildren+" \n"
                 + "  isFlowSensitive      :"+isFlowSensitive+" \n"
                 + "  isMethod             :"+isMethod+" \n"
                 + "  identifierMap        :\n"
-                + mapOut
+                + varMapOut
+                + "  typeMap              :\n"
+                + typeMapOut
                 +">\n";
     }
     
