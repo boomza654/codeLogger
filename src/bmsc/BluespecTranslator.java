@@ -95,7 +95,9 @@ public class BluespecTranslator {
         System.out.println("Finish Registering Types/functions/Parametrics");
         System.out.println(gidManager);
         Translator translator = new Translator(gidManager);
-        for(GeneralizedIdentifier gid: gidManager.scopeTree.get().typeMap.keyList()) { // get all outer most types
+        List<GeneralizedIdentifier> gidListView =gidManager.scopeTree.root.children.get(0).data.typeMap.keyList();
+        for(int i=0;i<gidListView.size();i++) { // get all outer most types
+            GeneralizedIdentifier gid = gidListView.get(i);
             String code=translator.translateType(gid);
             System.out.println(code);
         }

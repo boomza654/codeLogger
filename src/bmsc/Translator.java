@@ -25,6 +25,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
             "typedef Wire#(t) BypassWire#(type t);\n" + 
             "typedef Wire#(t) DWire#(type t);\n" + 
             "/* End of Minispec prelude */\n";
+    public static String INDENT = "    ";
     public final GeneralizedIdentifierManager gidManager;
     public Translator(GeneralizedIdentifierManager gidManager) {
         this.gidManager=gidManager;
@@ -38,11 +39,13 @@ public class Translator  extends MinispecBaseVisitor<String>{
         out+=("} "+ctx.upperCaseIdentifier().getText()+" deriving(Bits, Eq, FShow);\n");
         return out;
     }
-    @Override public String visitTypeDefStruct(TypeDefStructContext ctx) {
-        //check if this is parametric matching or not
-
-        return null;
-        
+    @Override public String visitStructMember(StructMemberContext ctx) {
+        String out = visit(ctx.type())+" "+ctx.lowerCaseIdentifier().getText()+";";
+        return out;
+    }
+    @Override public String visitType(TypeContext ctx) {
+         GeneralizedIdentifier gid = GidExtracter.extractGidAndRegisterType(ctx, gidManager);
+         return gid.toProperTypeString(gidManager);
     }
     /**
      * Start translating the registered type "gid" into the codeBuffer
@@ -58,25 +61,64 @@ public class Translator  extends MinispecBaseVisitor<String>{
         ParserRuleContext toTranslate=(ParserRuleContext)gidManager.getType(gid).definition; // you should not translate type of Minispec static synonym at all
         if(toTranslate instanceof TypeDefStructContext) {
             TypeDefStructContext ctx = (TypeDefStructContext) toTranslate;
-            translateTypeDefStruct(gid, ctx);
-            return "";
-        } else {
+            return translateTypeDefStruct(gid, ctx);
+        } else if(toTranslate instanceof TypeDefSynonymContext){
+
+            TypeDefSynonymContext ctx = (TypeDefSynonymContext) toTranslate;
+            return translateTypeDefSynonym(gid, ctx);
+        }else if(toTranslate instanceof TypeDefEnumContext){
             return visit(toTranslate);
         }
+        return null;
     }
     
     /**
      * try translate the STruct type def (take care of parameterization as well)
      * @param gid
      * @param ctx
+     * @return string for transaltion
      */
-    public void translateTypeDefStruct(GeneralizedIdentifier gid,TypeDefStructContext ctx) {
-
+    public String translateTypeDefStruct(GeneralizedIdentifier gid,TypeDefStructContext ctx) {
+        List<ParamFormalContext> paramFormalNodes = ctx.typeId().paramFormals()!=null?ctx.typeId().paramFormals().paramFormal():List.of();
+        boolean isParametric = GidExtracter.isParametric(paramFormalNodes);
+        // if the definition is parametric but the gid is concrete
+        // It measn we are trying to synthesize gid Tyep by matching ctx parameter
+        gidManager.enterImmutableScope();
+        if(isParametric) {
+            matchParameter(gid.params,paramFormalNodes);
+        }
+        String out = "typedef struct {\n";
+        for(StructMemberContext ectx: ctx.structMember()) {
+            out+=INDENT+visit(ectx)+"\n";
+        }
+        out+="} "+gid.toStringEscapeParametric()+"  deriving(Bits, Eq, FShow);\n";
+        gidManager.exitScope();
+        return out;
+    }
+    /**
+     * try translate the synonym typedef (take care of parameterization as well)
+     * @param gid
+     * @param ctx
+     * @return string for transaltion
+     */
+    public String translateTypeDefSynonym(GeneralizedIdentifier gid,TypeDefSynonymContext ctx) {
+        List<ParamFormalContext> paramFormalNodes = ctx.typeId().paramFormals()!=null?ctx.typeId().paramFormals().paramFormal():List.of();
+        boolean isParametric = GidExtracter.isParametric(paramFormalNodes);
+        // if the definition is parametric but the gid is concrete
+        // It measn we are trying to synthesize gid Tyep by matching ctx parameter
+        gidManager.enterImmutableScope();
+        if(isParametric) {
+            matchParameter(gid.params,paramFormalNodes);
+        }
+        String out = "typedef "+visit(ctx.type())+" "+gid.toStringEscapeParametric()+";\n";
+        gidManager.exitScope();
+        return out;
     }
     /**
      * Will let gidManager define Var/ type according to the matched param=> paramformal
      * @param parameters List of Parameter being matched
      * @param paramFormals List of ParamFormal Nodes being matched
+     * @effect  gidManager get defined new Var / Type
      */
     public void matchParameter(List<Parameter> parameters, List<ParamFormalContext> paramFormals ) {
         if(parameters.size()!=paramFormals.size()) {throw new RuntimeException("not same numbers of parameter are found");}
@@ -99,7 +141,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
                 //type
                 GeneralizedIdentifier typeGid = identifier(pf.upperCaseIdentifier().getText());
                 Type type = new Type(typeGid,p.gid);
-                gidManager.defineType(typeGid, type);
+                gidManager.defineType(typeGid, type); // Static elaboration Type def are definied using Tyep instead of using parse tree
             }
         }
     }

@@ -45,8 +45,24 @@ public class GeneralizedIdentifier {
      * @return the sacped identifier
      */
     public String toStringEscapeParametric() {
-        List<String> paramStrings= params.stream().map((s)->s.toString()).collect(Collectors.toList());
-        return name+"_"+String.join("_", paramStrings)+"_";
+        List<String> paramStrings= params.stream().map((s)->s.toStringEscapeParametric()).collect(Collectors.toList());
+        return name+(paramStrings.isEmpty()?"":"_"+String.join("_", paramStrings)+"_");
+    }
+    /**
+     * return the proper Tyep string to report 
+     * - if it is parametric that we define then escape
+     * - else elaborate leave the outer most scope like that but mess with the PArameter instead
+     * @param gidManager
+     * @return
+     */
+    public String toProperTypeString(GeneralizedIdentifierManager gidManager) {
+        if(gidManager.getParametric(name) !=null) {
+            return toStringEscapeParametric(); 
+        } else {
+            List<String> paramStrings= params.stream().map((s)->s.toProperTypeString(gidManager)).collect(Collectors.toList());
+            return name+(paramStrings.isEmpty()?"":"#("+String.join(",", paramStrings)+")");
+        }
+        
     }
 }
 
@@ -105,5 +121,17 @@ class Parameter{
             return number.toString();
         else
             return gid.toStringEscapeParametric();
+    }
+    
+    /**
+     * @see GeneralizedIdentifier#toProperTypeString(GeneralizedIdentifierManager)
+     * @param gidManager
+     * @return
+     */
+    public String toProperTypeString(GeneralizedIdentifierManager gidManager) {
+        if(number!=null)
+            return number.toString();
+        else
+            return gid.toProperTypeString(gidManager);
     }
 }

@@ -1,6 +1,7 @@
 package bmsc;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import api.antlr4.MinispecParser.ModuleIdContext;
@@ -73,5 +74,14 @@ public class Utility {
         int quotePos = in.indexOf("'");
         return quotePos == -1 || quotePos == 0;
     }
-
+    /**
+     * Add prefix to the src string every line
+     * @param src
+     * @param prefix
+     * @return
+     */
+    public static String addPrefix(String src, String prefix) {
+       String out= Arrays.stream( src.split("\\n")).map((s)->prefix+s).reduce("",(a,b)->a+b);
+       return out;
+    }
 }

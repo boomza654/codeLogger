@@ -192,6 +192,26 @@ class FirstPassGidRegister extends MinispecBaseVisitor<Void>{
  *
  */
 class GidExtracter{
+    
+    /**
+     * Try to extract GId of a type and also register them if the type did not exist before but its parametrized version exist)
+     * 
+     * @param ctx
+     * @param gidManager
+     * @return Generalized identifier from the extraction
+     */
+    public static GeneralizedIdentifier extractGidAndRegisterType(TypeContext ctx, GeneralizedIdentifierManager gidManager) {
+
+        List<ParamContext> paramNodes= ctx.params()!=null?ctx.params().param():List.of();
+        GeneralizedIdentifier gid = GidExtracter.extractGid(ctx.name.getText(), paramNodes, gidManager);
+        if(gidManager.getType(gid)==null && gidManager.getParametric(ctx.name.getText())!=null) {
+            // REgister new Type
+            Object definition = gidManager.getParametric(ctx.name.getText()).definition;
+            System.out.println("Define new Type "+ gid+" from parametric");
+            gidManager.defineTypeAtTop(gid, new Type(gid,definition));
+        }
+        return gid;
+    }
     /**
      * Create a generalized identifier
      * @param name the name of gID
@@ -201,20 +221,18 @@ class GidExtracter{
      */
     public static GeneralizedIdentifier extractGid (String name, List<ParamContext> paramNodes , GeneralizedIdentifierManager gidManager) {
         List<Parameter> params = new ArrayList<>();
-        
+        if(paramNodes.isEmpty() && gidManager.getType(identifier(name))!=null && gidManager.getType(identifier(name)).definition instanceof Type ) {
+            // Minispec static typedef need substitution
+            return ((Type)gidManager.getType(identifier(name)).definition).typeId;
+        }
         if(!paramNodes.isEmpty()) {
             for(ParamContext paramNode : paramNodes) {
                 if(paramNode.type()!=null) {
                     TypeContext paramType = paramNode.type();
-                    GeneralizedIdentifier toAdd =extractGid(paramType.name.getText(),paramType.params().param(),gidManager);
-                    if(toAdd.params.isEmpty() && gidManager.getType(toAdd).definition instanceof Type) {
-                        // if inside a parametric scope that the uppcase identifier is define ( not typedef) as B
-                        GeneralizedIdentifier replace = ((Type)gidManager.getType(toAdd).definition).typeId;
-                        System.out.println("Substituting "+toAdd+" with "+replace);
-                        params.add(new Parameter(null,replace));
-                    }else {
-                        params.add(new Parameter(null,toAdd));
-                    }
+                    List<ParamContext> typeParamNodes = paramType.params()!=null? paramType.params().param():List.of();
+                    GeneralizedIdentifier toAdd =extractGid(paramType.name.getText(),typeParamNodes,gidManager);
+                    params.add(new Parameter(null,toAdd));
+                    
                 } else if (paramNode.intParam!=null) {
                     Object value = ExpressionEvaluator.evaluate(paramNode.expression(), gidManager);
                     assert value instanceof Integer: "The parameter is not compiletime unrolled";
@@ -487,24 +505,15 @@ class ExpressionEvaluator extends MinispecBaseVisitor<Object>{
     }
     
     @Override public Object visitStructExpr(StructExprContext ctx) {
-        List<ParamContext> params= (ctx.type().params()!=null)? ctx.type().params().param():List.of();
         
-        GeneralizedIdentifier gid = GidExtracter.extractGid(ctx.type().name.getText() , params, gidManager);
-        Type foundType = gidManager.getType(gid);
-        Parametric foundParametric = gidManager.getParametric(ctx.type().name.getText());
-        if(foundType==null) {
-            if(foundParametric!=null) {
-                // add new Type
-                System.out.println("Define new Type "+ gid+" from parametric");
-                gidManager.defineType(gid, new Type(gid,foundParametric.definition));
-            }
-                // Else Assume this is bluespec Function
-        } 
-        // Else assume type is found regardless of whether it stems from parametric or not
+        GeneralizedIdentifier gid = GidExtracter.extractGidAndRegisterType(ctx.type() , gidManager);
+
         List<String> items = new ArrayList<>();
         for(MemberBindContext mctx: ctx.memberBinds().memberBind()) {
             items.add(mctx.field.getText()+":"+visit(mctx.expression()).toString());
         }
+        // There is no built-in Struct
+        //TODO: maybe fix this to toProperTypeNAme()?
         return gid.toStringEscapeParametric()+"{"+ String.join(", ", items)+"}";
     }
     
