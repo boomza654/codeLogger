@@ -1,12 +1,8 @@
 package bmsc;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
-import api.antlr4.MinispecParser.ModuleIdContext;
-import api.antlr4.MinispecParser.ParamContext;
-import api.antlr4.MinispecParser.ParamFormalContext;
+import static api.antlr4.MinispecParser.*;
 
 /**
  * Provide utility

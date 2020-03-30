@@ -17,7 +17,7 @@ public interface SemanticElement {
    
 
     public static final Type INTEGER_TYPE = new Type(GeneralizedIdentifier.identifier("Integer"),null);
-    public static Variable IntegerVar(String name) {return new Variable(INTEGER_TYPE, name);}
+    public static Variable IntegerVar(String name) {return new Variable(GeneralizedIdentifier.identifier("Integer"), name);}
 }
 
 /**
@@ -77,20 +77,20 @@ class Type implements SemanticElement{
  *
  */
 class Variable implements SemanticElement{
-    public final Type type;
+    public final GeneralizedIdentifier typeId;
     public final String name;
     public Object value = null;
-    public Variable(Type type, String name) {
-        this.type=type;
+    public Variable(GeneralizedIdentifier typeId, String name) {
+        this.typeId=typeId;
         this.name=name;
     }
     public Variable(Variable other) {
-        this.type=other.type;
+        this.typeId=other.typeId;
         this.name=other.name;
     }
     @Override 
     public String toString() {
-        return "<Var "+type.toString()+" "+name+" = "+value.toString()+" >";
+        return "<Var "+typeId.toString()+" "+name+" = "+value.toString()+" >";
     }
 
     // no override of equals/ hashCode since the varaible need absolute equality

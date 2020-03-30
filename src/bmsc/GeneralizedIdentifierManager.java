@@ -175,7 +175,7 @@ public class GeneralizedIdentifierManager {
     public void cleanUpBranchScopes() {
         Map<String,Variable> curVarMap = getCurrentVarMap();
         for(String varName: curVarMap.keySet()) {
-            if(curVarMap.get(varName).type.equals(SemanticElement.INTEGER_TYPE)) {
+            if(curVarMap.get(varName).typeId.equals(SemanticElement.INTEGER_TYPE.typeId)) {
                 // Check for poisoning of Integer type
                 for(StackTreeNode<Scope> childScope: scopeTree.curNode.children) {
                     assert childScope.data.isFlowSensitive: "Error the children of current node is not a branch";
@@ -273,7 +273,7 @@ public class GeneralizedIdentifierManager {
                 // Poisoned set 
                 assert !flowSensitiveScope.variableMap.containsKey(varName): "Error assertion flowsensitive scope actually has varr";
                 assert found.name.equals(varName): " found differnet var name";
-                Variable toSet =new Variable(found.type,varName);
+                Variable toSet =new Variable(found.typeId,varName);
                 toSet.value=value;
                 flowSensitiveScope.variableMap.put(varName,toSet);
             }else {

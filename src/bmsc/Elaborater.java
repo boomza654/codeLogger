@@ -160,7 +160,7 @@ class FirstPassGidRegister extends MinispecBaseVisitor<Void>{
         if(ctx.type().getText().equals("Integer")) {
             for(VarInitContext victx:ctx.varInit()) {
 
-                Variable var = new Variable(SemanticElement.INTEGER_TYPE,victx.var.getText());
+                Variable var = new Variable(SemanticElement.INTEGER_TYPE.typeId,victx.var.getText());
                 var.value= ExpressionEvaluator.evaluate(victx.expression(), gidManager); 
                 // no new function / type will be instatiate since there is no parametric registered yet
                 assert var.value instanceof Integer: "THe evaluated value of "+var.name+" is not compile-time Integer";
@@ -458,7 +458,7 @@ class ExpressionEvaluator extends MinispecBaseVisitor<Object>{
                 System.out.println("Warning "+name+" is not either Minispec function or varaible");
                 // Still okay cuz this might be lusepc function
             }
-            if(foundVar!=null && foundVar.type.equals(SemanticElement.INTEGER_TYPE) && (foundVar.value instanceof Integer)) {
+            if(foundVar!=null && foundVar.typeId.equals(SemanticElement.INTEGER_TYPE.typeId) && (foundVar.value instanceof Integer)) {
                 // Try to substitute varaible with Integer
                 return foundVar.value;
             }else {

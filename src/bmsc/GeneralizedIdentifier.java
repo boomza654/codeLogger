@@ -64,6 +64,15 @@ public class GeneralizedIdentifier {
         }
         
     }
+    
+    /**
+     * convert current Gid to module name
+     * @param gidManager
+     * @return the proper module name
+     */
+    public String toProperModuleString(GeneralizedIdentifierManager gidManager) {
+        return "mk"+toProperTypeString(gidManager);
+    }
 }
 
 /**
