@@ -23,7 +23,7 @@ public class GeneralizedIdentifier {
         this.params= List.copyOf(other.params);
     }
  
-    
+    public static GeneralizedIdentifier UNKNOWN = new GeneralizedIdentifier("UnknownType",List.of());
     public static GeneralizedIdentifier identifier(String name) {   return new GeneralizedIdentifier(name, List.of()); }
     @Override
     public boolean equals(Object other) {

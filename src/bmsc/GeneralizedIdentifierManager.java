@@ -22,15 +22,18 @@ public class GeneralizedIdentifierManager {
     /**
      * tree of context / scope
      */
+    // Queue for synthesization
+    public final List<Object> outSynthQueue; 
     public final StackTree<Scope> scopeTree;
     // at first plan to re write Bluespec type checking system as well, but figure out it is too much to do in 2 weeks
     public final FIFOMap<GeneralizedIdentifier,Func> funcMap;
     //public final FIFOMap<GeneralizedIdentifier,Type> typeMap;
     public final Map<String, Parametric> parametricMap;
-    public GeneralizedIdentifierManager() {
+    public GeneralizedIdentifierManager(List<Object> outSynthQueue) {
         scopeTree=new StackTree<>();
         funcMap= new FIFOMap<>();
         parametricMap= new HashMap<>();
+        this.outSynthQueue=outSynthQueue;
         //setupPrimitives();
         enterImmutableScope();
     }
@@ -216,6 +219,9 @@ public class GeneralizedIdentifierManager {
         Map<String,Variable> curGidMap = getCurrentVarMap();
         if(curGidMap.containsKey(varName)) {System.out.println("Error the "+varName+" is already defined"); return false;}
         curGidMap.put(varName,e);
+        if(scopeTree.curNode==scopeTree.root.children.get(0) && !e.typeId.equals(SemanticElement.INTEGER_TYPE.typeId)) {
+            outSynthQueue.add(e);
+        }
         return true;
     }
     /**
@@ -295,6 +301,7 @@ public class GeneralizedIdentifierManager {
     public boolean defineFunc(GeneralizedIdentifier funcGid, Func e) {
         if(funcMap.containsKey(funcGid)) {System.out.println("Error the "+funcGid+" is already defined"); return false;}
         funcMap.put(funcGid,e);
+        outSynthQueue.add(e);
         return true;
     }
     /**
@@ -315,6 +322,9 @@ public class GeneralizedIdentifierManager {
         }
         Map<GeneralizedIdentifier,Type> curGidMap = scopeTree.get().typeMap;
         curGidMap.put(typeGid,e);
+        if(scopeTree.curNode==scopeTree.root.children.get(0)) {
+            outSynthQueue.add(e);
+        }
         return true;
     }
     /**
@@ -391,12 +401,7 @@ public class GeneralizedIdentifierManager {
                 "Scope:\n"+
                 this.scopeTree.toString();
     }
-    
-    public static void main(String[] args) {
-        GeneralizedIdentifierManager manager = new GeneralizedIdentifierManager();
-        System.out.println(manager);
-    }
-    
+
 }
 
 

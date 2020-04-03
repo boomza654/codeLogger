@@ -69,9 +69,11 @@ public class Elaborater {
  *
  */
 class FirstPassGidRegister extends MinispecBaseVisitor<Void>{
-
+    
     public final GeneralizedIdentifierManager gidManager;
-    public FirstPassGidRegister(GeneralizedIdentifierManager gidManager) {this.gidManager=gidManager;}
+    public FirstPassGidRegister(GeneralizedIdentifierManager gidManager) {
+        this.gidManager=gidManager;
+    }
     
     @Override public Void visitTypeDefSynonym (TypeDefSynonymContext ctx) {
         List<ParamFormalContext> paramFormals= (ctx.typeId().paramFormals()!=null)? ctx.typeId().paramFormals().paramFormal():List.of();
@@ -85,7 +87,6 @@ class FirstPassGidRegister extends MinispecBaseVisitor<Void>{
         } else {
             GeneralizedIdentifier newGid = GidExtracter.extractGidFormal(ctx.typeId().name.getText(),paramFormals, gidManager);
             Type definition = new Type(newGid,ctx); // reserve definition of type GID for static elaboration type unrolling
-
             System.out.println("Register Type (Syn)    " +newGid);
             gidManager.defineType(newGid, definition);
         }
@@ -157,17 +158,22 @@ class FirstPassGidRegister extends MinispecBaseVisitor<Void>{
     
     @Override public Void visitVarBinding(VarBindingContext ctx) {
         // Support only Integer
-        if(ctx.type().getText().equals("Integer")) {
+        //if(ctx.type().getText().equals("Integer")) {
             for(VarInitContext victx:ctx.varInit()) {
-
-                Variable var = new Variable(SemanticElement.INTEGER_TYPE.typeId,victx.var.getText());
+                GeneralizedIdentifier typeId =GidExtracter.extractGid(ctx.type().name.getText(),
+                        (ctx.type().params()!=null? ctx.type().params().param(): List.of()),
+                        gidManager);
+                Variable var = new Variable(typeId,victx.var.getText());
                 var.value= ExpressionEvaluator.evaluate(victx.expression(), gidManager); 
                 // no new function / type will be instatiate since there is no parametric registered yet
-                assert var.value instanceof Integer: "THe evaluated value of "+var.name+" is not compile-time Integer";
-                System.out.println("Register Integer       "+var.name+" = "+var.value);
+                if(ctx.type().getText().equals("Integer"))
+                    assert var.value instanceof Integer: "THe evaluated value of "+var.name+" is not compile-time Integer";
+                else
+                    var.value=var.value.toString();
+                System.out.println("Register Variable      "+typeId.toString()+" "+var.name+" = "+var.value);
                 gidManager.defineVar(var.name, var);
             }
-        }
+       // }
         return null;
     }
     
@@ -183,6 +189,7 @@ class FirstPassGidRegister extends MinispecBaseVisitor<Void>{
     public static void firstPass(PackageDefContext ctx, GeneralizedIdentifierManager gidManager) {
         FirstPassGidRegister visitor = new FirstPassGidRegister(gidManager);
         visitor.visit(ctx);
+        
     }
 }
 
@@ -221,9 +228,9 @@ class GidExtracter{
      */
     public static GeneralizedIdentifier extractGid (String name, List<ParamContext> paramNodes , GeneralizedIdentifierManager gidManager) {
         List<Parameter> params = new ArrayList<>();
-        if(paramNodes.isEmpty() && gidManager.getType(identifier(name))!=null && gidManager.getType(identifier(name)).definition instanceof Type ) {
+        if(paramNodes.isEmpty() && gidManager.getType(identifier(name))!=null && gidManager.getType(identifier(name)).definition instanceof GeneralizedIdentifier ) {
             // Minispec static typedef need substitution
-            return ((Type)gidManager.getType(identifier(name)).definition).typeId;
+            return (GeneralizedIdentifier)gidManager.getType(identifier(name)).definition;
         }
         if(!paramNodes.isEmpty()) {
             for(ParamContext paramNode : paramNodes) {
@@ -293,7 +300,9 @@ class ExpressionEvaluator extends MinispecBaseVisitor<Object>{
     }
     
     @Override public Object visitIntLiteral(IntLiteralContext ctx) {
-        return Utility.getValueMinispecIntLiteral(ctx.getText());
+        if(Utility.isMinispecUnsizedLiteral(ctx.getText()))
+            return Utility.getValueMinispecIntLiteral(ctx.getText());
+        return ctx.getText();
     }
     
     @Override public Object visitUnopExpr(UnopExprContext ctx) { 
@@ -376,7 +385,7 @@ class ExpressionEvaluator extends MinispecBaseVisitor<Object>{
             }
             
         } else {
-            return "(("+pred+")?"+visit(ctx.expression(1))+":"+visit(ctx.expression(2))+")";
+            return "("+pred+"?"+visit(ctx.expression(1))+":"+visit(ctx.expression(2))+")";
         }
     }
     
@@ -401,18 +410,22 @@ class ExpressionEvaluator extends MinispecBaseVisitor<Object>{
         else {
             String out = "case("+branch+")\n";
             for(CaseExprItemContext ictx : ctx.caseExprItem()) {
-                out+=INDENT_STRING;
-                if(ictx.exprPrimary().isEmpty()) out+="default : ";
+                //out+=INDENT_STRING;
+                String item="";
+                if(ictx.exprPrimary().isEmpty()) item+="default : ";
                 else {
+                    List<String> matchCases = new ArrayList<>();
                     String matchCase="";
                     for(ExprPrimaryContext ectx: ictx.exprPrimary()) {
-                        matchCase+=visit(ectx)+", ";
+                        matchCases.add(visit(ectx).toString());
                     }
-                    matchCase=matchCase.substring(0, out.length()-1); // trim the last comma out
-                    out+=matchCase+": ";
+                    matchCase=String.join(", ", matchCases);
+                    item+=matchCase+": ";
                 }
-                out+=visit(ictx.expression())+"\n";
+                item+=visit(ictx.expression())+";\n";
+                out+=Utility.addPrefix(item, INDENT_STRING);
             }
+            out+="endcase";
             return out;
         }
     }
@@ -501,7 +514,7 @@ class ExpressionEvaluator extends MinispecBaseVisitor<Object>{
     }
 
     @Override public Object visitBlockExpr(BlockExprContext ctx) {
-        throw new RuntimeException("Haven't dealt with begin End lbock Expr");
+        return (new Translator(gidManager)).translateBeginEndBlock(ctx.beginEndBlock()); // will be String for sure
     }
     
     @Override public Object visitStructExpr(StructExprContext ctx) {

@@ -77,7 +77,7 @@ public class Utility {
      * @return
      */
     public static String addPrefix(String src, String prefix) {
-       String out= Arrays.stream( src.split("\\n")).map((s)->prefix+s).reduce("",(a,b)->a+b);
+       String out= Arrays.stream( src.split("\\n")).map((s)->prefix+s+"\n").reduce("",(a,b)->a+b);
        return out;
     }
 }

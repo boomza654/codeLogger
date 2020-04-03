@@ -87,19 +87,27 @@ public class BluespecTranslator {
             throw new RuntimeException(e);
         }
         // Register all identifiers into the manager
-        GeneralizedIdentifierManager gidManager = new GeneralizedIdentifierManager();
+
+        List<Object> synthQueue= new LinkedList<Object>();
+        GeneralizedIdentifierManager gidManager = new GeneralizedIdentifierManager(synthQueue);
         for(ParsedFile parsedFile:parsedFiles) {
-            System.out.println("Start Registering Types/Functions/Parametrics in file: "+ parsedFile.fileName);
+            System.out.println("Start Registering Variables/Types/Functions/Parametrics in file: "+ parsedFile.fileName);
             Elaborater.firstPassGidRegister(parsedFile, gidManager);
         }
-        System.out.println("Finish Registering Types/functions/Parametrics");
+        System.out.println("Finish Registering Variables/Types/functions/Parametrics");
         System.out.println(gidManager);
+        System.out.println("SynthQueue:");
+        for(Object e: synthQueue)
+            System.out.println("\t"+e);
         Translator translator = new Translator(gidManager);
-        List<GeneralizedIdentifier> gidListView =gidManager.scopeTree.root.children.get(0).data.typeMap.keyList();
-        for(int i=0;i<gidListView.size();i++) { // get all outer most types
-            GeneralizedIdentifier gid = gidListView.get(i);
-            String code=translator.translateType(gid);
-            System.out.println(code);
+        for(int i=0;i<synthQueue.size();i++) { // get all outer most types
+                Object toSynth = synthQueue.get(i);
+                String code="";
+                if(toSynth instanceof Type) code=translator.translateType((Type)toSynth);
+                else if (toSynth instanceof Variable) code=translator.translateVar((Variable)toSynth);
+                else if (toSynth instanceof Func) code=translator.translateFunc((Func)toSynth);
+                else continue;
+                System.out.println(code);
         }
         
     }

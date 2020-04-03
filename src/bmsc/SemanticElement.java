@@ -117,7 +117,7 @@ class Func implements SemanticElement {
     }
     @Override 
     public String toString() {
-        return "<Func "+funcId.toString()+" >";
+        return "<Func "+funcId.toString()+">";
     }
     @Override
     public boolean equals(Object other) {
