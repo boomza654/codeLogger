@@ -1,5 +1,8 @@
 package bmsc;
 
+import java.util.*;
+
+import static api.antlr4.MinispecParser.*;
 
 /**
  * Provide utility
@@ -57,7 +60,7 @@ public class Utility {
         }
         
     }
- 
+
     /**
      * 
      * @param in literal
@@ -67,5 +70,24 @@ public class Utility {
         int quotePos = in.indexOf("'");
         return quotePos == -1 || quotePos == 0;
     }
-
+    /**
+     * Add prefix to the src string every line
+     * @param src
+     * @param prefix
+     * @return
+     */
+    public static String addPrefix(String src, String prefix) {
+       String out= Arrays.stream( src.split("\\n")).map((s)->prefix+s+"\n").reduce("",(a,b)->a+b);
+       return out;
+    }
+    /**
+     * return a proper Bluespec literal string
+     * @param input
+     * @return
+     */
+    public static String exprToString(Object input) {
+        if(input instanceof Boolean)
+            return ((Boolean)input)?"True":"False";
+        return input.toString();
+    }
 }

@@ -10,7 +10,7 @@ import java.util.*;
  *
  */
 public class BluespecTranslator {
-    
+   
     public static void showHelp() {
         final String helpMessage = "usage: [option] input_filename topmodule \n\n" + 
                 "Result : Will translate top_module of file_name in ms into synthesizable bsv \n\n"+
@@ -87,11 +87,28 @@ public class BluespecTranslator {
             throw new RuntimeException(e);
         }
         // Register all identifiers into the manager
-        GeneralizedIdentifierManager gidManager = new GeneralizedIdentifierManager();
+
+        List<Object> synthQueue= new LinkedList<Object>();
+        GeneralizedIdentifierManager gidManager = new GeneralizedIdentifierManager(synthQueue);
         for(ParsedFile parsedFile:parsedFiles) {
-            Elaborater.registerGidfromParsedFile(parsedFile, gidManager);
+            System.out.println("Start Registering Variables/Types/Functions/Parametrics in file: "+ parsedFile.fileName);
+            Elaborater.firstPassGidRegister(parsedFile, gidManager);
         }
+        System.out.println("Finish Registering Variables/Types/functions/Parametrics");
         System.out.println(gidManager);
+        System.out.println("SynthQueue:");
+        for(Object e: synthQueue)
+            System.out.println("\t"+e);
+        Translator translator = new Translator(gidManager);
+        for(int i=0;i<synthQueue.size();i++) { // get all outer most types
+                Object toSynth = synthQueue.get(i);
+                String code="";
+                if(toSynth instanceof Type) code=translator.translateType((Type)toSynth);
+                else if (toSynth instanceof Variable) code=translator.translateVar((Variable)toSynth);
+                else if (toSynth instanceof Func) code=translator.translateFunc((Func)toSynth);
+                else continue;
+                System.out.println(code);
+        }
         
     }
     /**
