@@ -22,7 +22,8 @@ public class GeneralizedIdentifier {
         this.name=other.name;
         this.params= List.copyOf(other.params);
     }
- 
+    public static GeneralizedIdentifier ENUMVALUE = new GeneralizedIdentifier("EnumValue",List.of());
+    
     public static GeneralizedIdentifier UNKNOWN = new GeneralizedIdentifier("UnknownType",List.of());
     public static GeneralizedIdentifier identifier(String name) {   return new GeneralizedIdentifier(name, List.of()); }
     @Override

@@ -80,6 +80,8 @@ class Variable implements SemanticElement{
     public final GeneralizedIdentifier typeId;
     public final String name;
     public Object value = null;
+    public boolean isModule = false; // set this to true to idicate declaring a varaible that is supposed to be sub module
+    // useful when declared inside a module
     public Variable(GeneralizedIdentifier typeId, String name) {
         this.typeId=typeId;
         this.name=name;

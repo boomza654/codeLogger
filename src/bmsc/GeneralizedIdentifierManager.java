@@ -22,6 +22,8 @@ public class GeneralizedIdentifierManager {
     /**
      * tree of context / scope
      */
+    public static Set<GeneralizedIdentifier> UnsynthesizableTypes = Set.of(SemanticElement.INTEGER_TYPE.typeId
+            , GeneralizedIdentifier.ENUMVALUE, GeneralizedIdentifier.UNKNOWN);
     // Queue for synthesization
     public final List<Object> outSynthQueue; 
     public final StackTree<Scope> scopeTree;
@@ -219,7 +221,7 @@ public class GeneralizedIdentifierManager {
         Map<String,Variable> curGidMap = getCurrentVarMap();
         if(curGidMap.containsKey(varName)) {System.out.println("Error the "+varName+" is already defined"); return false;}
         curGidMap.put(varName,e);
-        if(scopeTree.curNode==scopeTree.root.children.get(0) && !e.typeId.equals(SemanticElement.INTEGER_TYPE.typeId)) {
+        if(scopeTree.curNode==scopeTree.root.children.get(0) && !UnsynthesizableTypes.contains(e.typeId)) {
             outSynthQueue.add(e);
         }
         return true;
@@ -391,6 +393,21 @@ public class GeneralizedIdentifierManager {
     }
 //
 //    public boolean setElement(String gid, Variable e) {}
+    /**
+     * 
+     * @return whether current scope is inside method
+     */
+    public boolean isInMethod() {
+        StackTreeNode<Scope> savedPointer = scopeTree.curNode;
+        boolean out=false;
+        while(scopeTree.curNode!=scopeTree.root) {
+            if(scopeTree.get().isMethod) {out=true;break;}
+            scopeTree.traverseUp();
+        }
+        // restire curNode
+        scopeTree.curNode=savedPointer;
+        return out;
+    }
 
     
     @Override
@@ -401,7 +418,7 @@ public class GeneralizedIdentifierManager {
                 "Scope:\n"+
                 this.scopeTree.toString();
     }
-
+    
 }
 
 

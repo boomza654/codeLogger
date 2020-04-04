@@ -1,5 +1,6 @@
 package bmsc;
 import api.antlr4.*;
+import static bmsc.BBoolean.*;
 import api.antlr4.MinispecParser.ParamContext;
 
 import static api.antlr4.MinispecParser.*;
@@ -169,7 +170,7 @@ class FirstPassGidRegister extends MinispecBaseVisitor<Void>{
                 if(ctx.type().getText().equals("Integer"))
                     assert var.value instanceof Integer: "THe evaluated value of "+var.name+" is not compile-time Integer";
                 else
-                    var.value=var.value.toString();
+                    var.value=Utility.exprToString(var.value);
                 System.out.println("Register Variable      "+typeId.toString()+" "+var.name+" = "+var.value);
                 gidManager.defineVar(var.name, var);
             }
@@ -319,11 +320,11 @@ class ExpressionEvaluator extends MinispecBaseVisitor<Object>{
                 // Ignore reduce and,or ,xor
                 default: return op+v;
             }
-        } else if (value instanceof Boolean) {
-            Boolean v = (Boolean) value;
+        } else if (value instanceof BBoolean) {
+            BBoolean v = (BBoolean) value;
             switch(op) {
-                case "!": return !v;
-                default: return op+(v?"True":"False");
+                case "!": return bbool(!v.value); 
+                default: return op+(v);
             }
         } else {
             return op+value;
@@ -353,21 +354,21 @@ class ExpressionEvaluator extends MinispecBaseVisitor<Object>{
             case "^": return l^r;
             case "^~":
             case "~^": return l^~r;
-            case "<": return l<r;
-            case "<=": return l<=r;
-            case ">": return l>r;
-            case ">=": return l>=r;
-            case "==": return l==r;
-            case "!=": return l!=r;
+            case "<": return bbool(l<r);
+            case "<=": return bbool(l<=r);
+            case ">": return bbool(l>r);
+            case ">=": return bbool(l>=r);
+            case "==": return bbool(l==r);
+            case "!=": return bbool(l!=r);
             default: return l+" "+op+" "+r;
             }
-        } else if(left instanceof Boolean && right instanceof Boolean) {
-            Boolean l=(Boolean) left;
-            Boolean r = (Boolean) right;
+        } else if(left instanceof BBoolean && right instanceof BBoolean) {
+            BBoolean l=(BBoolean) left;
+            BBoolean r = (BBoolean) right;
             switch(op) {
-            case "&&": return l&&r;
-            case "||": return l||r;
-            default: return (l?"True":"False")+" "+op+" "+(r?"True":"False"); 
+            case "&&": return bbool(l.value&&r.value);
+            case "||": return bbool(l.value||r.value);
+            default: return l+" "+op+" "+r; 
             }
         } else {
             return left+" "+op+" "+right;
@@ -376,9 +377,9 @@ class ExpressionEvaluator extends MinispecBaseVisitor<Object>{
     
     @Override public Object visitCondExpr(CondExprContext ctx) { 
         Object pred = visit(ctx.pred);
-        if (pred instanceof Boolean) {
-            Object value = visit(ctx.expression((Boolean)pred?1:2));
-            if(value instanceof Boolean || value instanceof Integer) {
+        if (pred instanceof BBoolean) {
+            Object value = visit(ctx.expression(((BBoolean)pred).value?1:2));
+            if(isCompileTimeValue(value)) {
                 return value;
             } else {
                 return "("+value+")";
@@ -465,6 +466,10 @@ class ExpressionEvaluator extends MinispecBaseVisitor<Object>{
         } else {
             // either function with no parametric or varaible
             String name = ctx.var.getText();
+            // boolean literal
+            if(name.equals("True") || name.equals("False")) {
+                return bbool(name.equals("True"));
+            }
             Func foundFunc = gidManager.getFunc(identifier(name));
             Variable foundVar = gidManager.getVar(name);
             if(foundFunc==null && foundVar==null) {
@@ -540,9 +545,12 @@ class ExpressionEvaluator extends MinispecBaseVisitor<Object>{
         //System.out.println("Start Evaluating :"+ ctx.getText());
         ExpressionEvaluator evaluator = new ExpressionEvaluator(gidManager);
         Object result = evaluator.visit(ctx);
-        System.out.println("Evaluted: "+ctx.getText()+" = "+ result);
+        //System.out.println("Evaluted: "+ctx.getText()+" = "+ result);
         return result;
     }
     
-    private static boolean isCompileTimeValue(Object x) {return x instanceof Integer || x instanceof Boolean;}
+    private static boolean isCompileTimeValue(Object x) {return x instanceof Integer || x instanceof BBoolean;}
 }
+
+
+

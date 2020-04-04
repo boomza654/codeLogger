@@ -1,6 +1,10 @@
 package bmsc;
 import api.antlr4.*;
+import api.antlr4.MinispecParser.CaseExprItemContext;
+import api.antlr4.MinispecParser.ExprPrimaryContext;
+import api.antlr4.MinispecParser.ExpressionContext;
 import api.antlr4.MinispecParser.LetBindingContext;
+import api.antlr4.MinispecParser.TypeDefEnumElementContext;
 import api.antlr4.MinispecParser.VarBindingContext;
 import api.antlr4.MinispecParser.VarInitContext;
 
@@ -41,11 +45,13 @@ public class Translator  extends MinispecBaseVisitor<String>{
         this.resultMap=new HashMap<>();
     }
     
-    
+    @Override public String visitTypeDefEnumElement(TypeDefEnumElementContext ctx) {
+        gidManager.defineVar(ctx.upperCaseIdentifier().getText(), new Variable(ENUMVALUE, ctx.upperCaseIdentifier().getText()));
+        return ctx.getText();
+    }
     @Override public String visitTypeDefEnum(TypeDefEnumContext ctx) {
         String out = ("typedef enum { ");
-        List<String> elements = ctx.typeDefEnumElement().stream().map((e)->e.getText()).collect(Collectors.toList());
-        out+=String.join(", ", elements);
+        out+=visitJoin(ctx.typeDefEnumElement(),", ");
         out+=("} "+ctx.upperCaseIdentifier().getText()+" deriving(Bits, Eq, FShow);\n");
         return out;
     }
@@ -60,14 +66,14 @@ public class Translator  extends MinispecBaseVisitor<String>{
     @Override public String visitArgFormal(ArgFormalContext ctx) {
         return visit(ctx.type())+" "+ctx.argName.getText();
     }
+    // Just return the code of ARG Formal but not register / match any args
     @Override public String visitArgFormals(ArgFormalsContext ctx) {
-        List<String> argFormals = ctx.argFormal().stream().map((e)->visit(e)).collect(Collectors.toList());
-        return "("+String.join(", ", argFormals)+")";
+        return "("+visitJoin(ctx.argFormal(), ", ")+")";
     }
     @Override public String visitStmt(StmtContext ctx) {
         if(ctx.expression()!=null) {
             // ignore display and write statement
-            
+            // Expression in stmt context can potentailly be system calls so we haveto be careful with that
             if(ctx.expression() instanceof OperatorExprContext) {
                 OperatorExprContext octx = (OperatorExprContext)ctx.expression();
                 if(octx.binopExpr().unopExpr()!=null && octx.binopExpr().unopExpr().exprPrimary()!=null && octx.binopExpr().unopExpr().exprPrimary() instanceof CallExprContext) {
@@ -80,14 +86,26 @@ public class Translator  extends MinispecBaseVisitor<String>{
             return ExpressionEvaluator.evaluate(ctx.expression(), gidManager)+";\n";
         } else if (ctx.varDecl()!=null) {
             return visit(ctx.varDecl());
+        } else if (ctx.varAssign()!=null) {
+            return visit(ctx.varAssign());
+        } else if (ctx.regWrite()!=null) {
+            return visit(ctx.regWrite());
+        } else if (ctx.beginEndBlock()!=null) {
+            return visit(ctx.beginEndBlock());
+        } else if (ctx.ifStmt()!=null) {
+            return visit(ctx.ifStmt());
+        } else if (ctx.caseStmt()!=null) {
+            return visit(ctx.caseStmt());
+        } else if (ctx.forStmt()!=null) {
+            return visit(ctx.forStmt());
         }
-        return "";
+        throw new RuntimeException("WTF Stmt un handled");
+        //return "";
     }
     @Override public String visitBeginEndBlock(BeginEndBlockContext ctx) {
         String out = "begin\n";
         gidManager.enterMutableScope();
-        for(StmtContext sctx:ctx.stmt())
-            out+=Utility.addPrefix(visit(sctx),INDENT)+"\n";
+        out+=Utility.addPrefix(visitJoin(ctx.stmt(), "")+"\n",INDENT);
         out+="end\n";
         gidManager.exitScope();
         return out;
@@ -113,7 +131,8 @@ public class Translator  extends MinispecBaseVisitor<String>{
             varInitString.add(var.name+"="+var.value);
         }
         out+=String.join(", ", varInitString)+";\n";
-        return out;
+        String integerDecl = "0;// substitute Integer decl \n";
+        return ctx.type().getText().equals("Integer")?integerDecl:out;
     }
     
     @Override public String visitLetBinding ( LetBindingContext ctx) {
@@ -125,7 +144,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
             Variable var = new Variable(SemanticElement.INTEGER_TYPE.typeId,varName);
             var.value=value;
             gidManager.defineVar(varName, var);
-            return "/*Used To Be Integer Declaration*/\n";
+            return "0;// substitute Integer decl \\n";
         } else { // normal let
             List<String> varNames = ctx.lowerCaseIdentifier().stream().map((e)->e.getText()).collect(Collectors.toList());
             for(String varName:varNames) {
@@ -140,6 +159,244 @@ public class Translator  extends MinispecBaseVisitor<String>{
         }
     }
     
+    @Override public String visitVarAssign(VarAssignContext ctx) {
+        if(ctx.var==null) {
+            // bit unpacking assing
+            String out ="{";
+            out+=visitJoin(ctx.lvalue(),", ")+"}=";
+            out+= ExpressionEvaluator.evaluate(ctx.expression(), gidManager)+";\n";
+            return out;
+        } else {
+            // deal with Integer
+            if(ctx.var instanceof SimpleLvalueContext) {
+                String varName = ((SimpleLvalueContext)ctx.var).getText();
+                Variable var = gidManager.getVar(varName);
+                if(var.typeId.equals(SemanticElement.INTEGER_TYPE.typeId)) {
+                    // deal with integer
+                    Object assignedValue= ExpressionEvaluator.evaluate(ctx.expression(), gidManager);
+                    assert assignedValue instanceof Integer : "Error cannot convert Expression "+ ctx.expression().getText()+" to int value";
+                    gidManager.setVar(varName, assignedValue);
+                    return "0;// substitute Integer assignemnt \n";
+                }
+            } else if (ctx.var instanceof MemberLvalueContext) {
+                MemberLvalueContext mctx = (MemberLvalueContext)ctx.var;
+                // Daniels' comment herer
+                // memberLvalue's lvalue() can be a Simple/Index/Slice/Member lvalue.
+                // Two of these are correct: simple and index.
+                // The other two denote different errors (when used on submodules):
+                // slice is just garbage, and member means the user is trying to reach
+                // into a submodule's input (also super-illegal).
+                // We first get to the base, and raise errors only if it's a submodule.
+                LvalueContext lvctx = mctx.lvalue();
+                boolean hasSlice= false;
+                boolean hasMember=false; // We are assuming that struct of modules are pretty much undefined
+                // as well as subinterface and stuff
+                // but Vector of submodules are still fine... (which is questionable)
+                while(!(lvctx instanceof SimpleLvalueContext)) {
+                    if(lvctx instanceof MemberLvalueContext) {
+                        hasMember=true;
+                        lvctx=((MemberLvalueContext)lvctx).lvalue();
+                    } else if(lvctx instanceof IndexLvalueContext) {
+                        lvctx=((IndexLvalueContext)lvctx).lvalue();
+                    }  else if(lvctx instanceof SliceLvalueContext) {
+                        lvctx=((SliceLvalueContext)lvctx).lvalue();
+                    }  
+                }
+                String varName = lvctx.getText();
+                Variable var = gidManager.getVar(varName);
+                if (var.isModule) {
+                    // submodule ocmmunication here
+                    assert !(hasSlice || hasMember || gidManager.isInMethod()) : "Err wrong submodule assignment syntax" ;
+                    String out = visit(mctx.lvalue())
+                            +"."
+                            +inputNameToActionName(mctx.lowerCaseIdentifier().getText())
+                            +"("+ExpressionEvaluator.evaluate(ctx.expression(), gidManager)+");\n";
+                    return out;
+                }
+            }
+
+            // Make sure not module input TODO
+            return visit(ctx.var)+" = "+ExpressionEvaluator.evaluate(ctx.expression(), gidManager)+";\n";
+        }
+    }
+    /* IF LVALUE are visited we assume that this is not referring to any submodule's input*/
+    @Override public String visitSimpleLvalue(SimpleLvalueContext ctx){
+        return ctx.getText();
+    }
+    @Override public String visitMemberLvalue(MemberLvalueContext ctx) {
+        return visit(ctx.lvalue())+"."+ctx.lowerCaseIdentifier().getText();
+    }
+    @Override public String visitIndexLvalue(IndexLvalueContext ctx) {
+        return visit(ctx.lvalue())+"["+ExpressionEvaluator.evaluate(ctx.index, gidManager)+"]";
+    }
+    @Override public String visitSliceLvalue(SliceLvalueContext ctx) {
+        return visit(ctx.lvalue())+"["+ExpressionEvaluator.evaluate(ctx.msb, gidManager)+":"+ExpressionEvaluator.evaluate(ctx.lsb, gidManager)+"]";
+    }
+    @Override public String visitRegWrite(RegWriteContext ctx) {
+        return visit(ctx.lvalue())+" <= "+ ExpressionEvaluator.evaluate(ctx.expression(), gidManager)+";\n";
+    }
+    
+    @Override public String visitIfStmt(IfStmtContext ctx) {
+        Object branch = ExpressionEvaluator.evaluate(ctx.expression(),gidManager);
+        if(branch instanceof BBoolean) {
+            // Statically elaborated branch
+            boolean sel = ((BBoolean) branch).value;
+            boolean hasElse = ctx.stmt().size()==2;
+            String code="";
+            if(sel) {
+                StmtContext sctx=ctx.stmt().get(0);
+                gidManager.enterMutableScope();
+                code =visit(sctx);
+                gidManager.exitScope();
+                if(sctx.beginEndBlock()!=null) {
+                    // encapsulate single statment in a begin end block
+                    code=Utility.addPrefix(code, INDENT);
+                    code= "begin\n"+code+"end\n";
+                }
+            } else if(hasElse) {
+                StmtContext sctx=ctx.stmt().get(1);
+                gidManager.enterMutableScope();
+                code =visit(sctx);
+                gidManager.exitScope();
+                if(sctx.beginEndBlock()!=null) {
+                    // encapsulate single statment in a begin end block
+                    code=Utility.addPrefix(code, INDENT);
+                    code= "begin\n"+code+"end\n";
+                }
+            } else {
+                code= "0;// non-taken if with not else\n";
+            }            
+            return code;
+        } else {
+            String out = "if("+branch+")";
+            gidManager.enterBranchScope();
+            if(ctx.stmt().get(0).beginEndBlock()!=null) {
+                out+=visit(ctx.stmt().get(0).beginEndBlock());
+            } else {
+                out+="\n"+Utility.addPrefix(visit(ctx.stmt().get(0)), INDENT);
+            }
+            gidManager.exitScope();
+            boolean hasElse = ctx.stmt().size()==2;
+            if(hasElse) {
+                out+=" else ";
+                gidManager.enterBranchScope();
+                if(ctx.stmt().get(1).beginEndBlock()!=null) {
+                    out+=visit(ctx.stmt().get(1).beginEndBlock());
+                } else {
+                    out+="\n"+Utility.addPrefix(visit(ctx.stmt().get(1)), INDENT);
+                }
+                gidManager.exitScope();
+            }
+            gidManager.cleanUpBranchScopes();
+            return out;
+        }
+    }
+    
+    @Override public String visitCaseStmt(CaseStmtContext ctx) {
+        Object branch= ExpressionEvaluator.evaluate(ctx.expression(),gidManager);
+        if(branch instanceof BBoolean || branch instanceof Integer) {
+            // Statically elaborated case Stmt
+            gidManager.enterMutableScope();
+            String code =null;
+            for(CaseStmtItemContext ictx: ctx.caseStmtItem()) {
+                for(ExpressionContext ectx: ictx.expression()) {
+                    Object choice = ExpressionEvaluator.evaluate(ectx, gidManager);
+                    if(code==null && branch.equals(choice)) {
+                        if(ictx.stmt().beginEndBlock()!=null) 
+                            code=visit(ictx.stmt());
+                        else
+                            code= "begin\n"+Utility.addPrefix(visit(ictx.stmt()), INDENT)+"end\n";
+                    }
+                }
+            }
+            // Else match with default:
+            if(ctx.caseStmtDefaultItem()!=null && code==null)
+                if(ctx.caseStmtDefaultItem().stmt().beginEndBlock()!=null) 
+                    code=visit(ctx.caseStmtDefaultItem().stmt());
+                else
+                    code= "begin\n"+Utility.addPrefix(visit(ctx.caseStmtDefaultItem().stmt()), INDENT)+"end\n";
+            gidManager.exitScope();
+            if(code==null) code="0;/*Nothing get chosen case Stmt*/\n";
+            return code;
+        }
+        else {
+            String out = "case("+branch+")\n";
+            for(CaseStmtItemContext ictx : ctx.caseStmtItem()) {
+                //out+=INDENT_STRING;
+               String item="";
+               gidManager.enterBranchScope();
+               List<String> exprs = new ArrayList<>();
+               for(ExpressionContext ectx: ictx.expression()) {exprs.add(ExpressionEvaluator.evaluate(ectx, gidManager).toString());}
+               item+=String.join(", ", exprs)+" : ";
+               if(ictx.stmt().beginEndBlock()!=null)
+                   item+=(visit(ictx.stmt()));
+               else
+                   item+="\n"+Utility.addPrefix(visit(ictx.stmt()),INDENT);
+               out+=Utility.addPrefix(item, INDENT);
+               gidManager.exitScope();
+            }
+            if(ctx.caseStmtDefaultItem()!=null) {
+
+                String item="";
+                item+="default : ";
+                if(ctx.caseStmtDefaultItem().stmt().beginEndBlock()!=null)
+                    item+=(visit(ctx.caseStmtDefaultItem().stmt()));
+                else
+                    item+="\n"+Utility.addPrefix(visit(ctx.caseStmtDefaultItem().stmt()),INDENT);
+
+                out+=Utility.addPrefix(item, INDENT);
+            }
+            out+="endcase\n";
+            gidManager.cleanUpBranchScopes();
+            return out;
+        }
+    }
+    
+    @Override public String visitForStmt(ForStmtContext ctx) {
+        String code="";
+        gidManager.enterMutableScope();
+        assert ctx.type().getText().equals("Integer"): "For looping not on Integer";
+        String varName= ctx.initVar.getText();
+        Object initObj = ExpressionEvaluator.evaluate(ctx.expression().get(0), gidManager);
+        assert initObj instanceof Integer : "THe initializ value is not compile-time integer";
+        Integer initValue = (Integer) initObj;
+        assert ctx.updVar.getText().equals(varName): "Incremental varaible is not same as init var";
+        Variable loopVar = SemanticElement.IntegerVar(varName);
+        loopVar.value=initValue;
+        gidManager.defineVar(varName, loopVar);
+        ExpressionContext loopingPredicate = ctx.expression().get(1);
+        ExpressionContext incExpression = ctx.expression().get(2);
+        while(true) {
+            Object predicate = ExpressionEvaluator.evaluate(loopingPredicate, gidManager);
+            assert predicate instanceof BBoolean : "looping predicate is not evaluable compile time";
+            BBoolean bpredicate = (BBoolean)predicate;
+            if(!bpredicate.value) break;
+            // then continue synthesizing
+            System.out.println("Elaborate For loop: "+varName+" = "+loopVar.value);
+            if(ctx.stmt().beginEndBlock()!=null) {
+                code+=visit(ctx.stmt());
+            }else {
+                code +="begin\n"+Utility.addPrefix(visit(ctx.stmt()), INDENT)+"end\n";
+            }
+            // Increment
+            Object nextValue = ExpressionEvaluator.evaluate(incExpression, gidManager);
+            assert nextValue instanceof Integer: "THe incremental expression is not compile time elaboratable";
+            gidManager.setVar(varName, nextValue);
+        }
+        gidManager.exitScope();
+        return code;
+        
+    }
+    /**
+     * Join visiting things in ctxs by j
+     * @param ctxs visit each node in ctxs
+     * @param j string to join
+     * @return String of joined thing
+     */
+    public String visitJoin(List<? extends ParserRuleContext> ctxs, String j) {
+        List<String> out = ctxs.stream().map((e)->visit(e)).collect(Collectors.toList());
+        return String.join(j, out);
+    }
     /**
      * Start translating the registered type "gid" into the codeBuffer
      * @param gid of the type to translate
@@ -212,9 +469,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
             // nrmal function def
             out+=";\n";
             String code="";
-            for(StmtContext sctx: ctx.stmt()) {
-                code+=visit(sctx);
-            }
+            code+= visitJoin(ctx.stmt(), "");
             out+=Utility.addPrefix(code, INDENT);
             out+="endfunction\n";
         }
@@ -277,9 +532,8 @@ public class Translator  extends MinispecBaseVisitor<String>{
             matchParameter(gid.params,paramFormalNodes);
         }
         String out = "typedef struct {\n";
-        for(StructMemberContext ectx: ctx.structMember()) {
-            out+=INDENT+visit(ectx)+"\n";
-        }
+        String members = visitJoin(ctx.structMember(), "\n")+"\n";
+        out+=Utility.addPrefix(members, INDENT);
         out+="} "+gid.toStringEscapeParametric()+"  deriving(Bits, Eq, FShow);\n";
         gidManager.exitScope();
         return out;
@@ -324,10 +578,16 @@ public class Translator  extends MinispecBaseVisitor<String>{
         // Real synthesis
         String properInterfaceName = gid.toStringEscapeParametric();
         String interfaceCode = "interface "+properInterfaceName+";\n";
+        List<Variable> inputVarList = new ArrayList<>();
         // More on interface code later
         String out = "module "+ gid.toProperModuleString(gidManager);
+        List<Variable> argList = extractArgFormalFunc(ctx.argFormals()!=null? ctx.argFormals().argFormal():List.of());
+        argList.forEach((var)->{var.isModule=true;gidManager.defineVar(var.name, var);}); // tag that each of arguments mst be Value or module
+        //(so that when interact with them) we need change syntax
+        
+
         if(ctx.argFormals()!=null) out+="#"+visit(ctx.argFormals());
-        out+=";\n";
+        out+="("+properInterfaceName+");\n";
         out+="endmodule\n";
         gidManager.exitScope();
         return out;
@@ -381,6 +641,13 @@ public class Translator  extends MinispecBaseVisitor<String>{
         }
         return out;
     }
+    
+    /**
+     * Convert submodule input wire name to Action name
+     * @param inputName
+     * @return action name of that input
+     */
+    private static String inputNameToActionName(String inputName) { return inputName+"___input";}
 }
 
 

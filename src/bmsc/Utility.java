@@ -80,4 +80,14 @@ public class Utility {
        String out= Arrays.stream( src.split("\\n")).map((s)->prefix+s+"\n").reduce("",(a,b)->a+b);
        return out;
     }
+    /**
+     * return a proper Bluespec literal string
+     * @param input
+     * @return
+     */
+    public static String exprToString(Object input) {
+        if(input instanceof Boolean)
+            return ((Boolean)input)?"True":"False";
+        return input.toString();
+    }
 }
