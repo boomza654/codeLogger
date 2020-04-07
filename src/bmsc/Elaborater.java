@@ -212,13 +212,35 @@ class GidExtracter{
 
         List<ParamContext> paramNodes= ctx.params()!=null?ctx.params().param():List.of();
         GeneralizedIdentifier gid = GidExtracter.extractGid(ctx.name.getText(), paramNodes, gidManager);
-        if(gidManager.getType(gid)==null && gidManager.getParametric(ctx.name.getText())!=null) {
+        tryRegister(gid,gidManager);
+//        if(gidManager.getType(gid)==null && gidManager.getParametric(ctx.name.getText())!=null) {
+//            // REgister new Type
+//            Object definition = gidManager.getParametric(ctx.name.getText()).definition;
+//            System.out.println("Define new Type "+ gid+" from parametric");
+//            gidManager.defineTypeAtTop(gid, new Type(gid,definition));
+//        }
+        return gid;
+    }
+    /**
+     * try register the gid and its subtype in the type def
+     * recursively define new stuff
+     * @param gid
+     * @param gidManager
+     */
+    public static void tryRegister(GeneralizedIdentifier gid, GeneralizedIdentifierManager gidManager) {
+        //System.out.println("Try register "+gid);
+        if(gidManager.getType(gid)==null && gidManager.getParametric(gid.name)!=null) {
             // REgister new Type
-            Object definition = gidManager.getParametric(ctx.name.getText()).definition;
+            Object definition = gidManager.getParametric(gid.name).definition;
             System.out.println("Define new Type "+ gid+" from parametric");
             gidManager.defineTypeAtTop(gid, new Type(gid,definition));
         }
-        return gid;
+        if(gidManager.getType(gid)==null && gidManager.getParametric(gid.name)==null) {
+            //System.out.println(gid.name+" is Bluespec Type");
+            for(int i=0;i<gid.params.size();i++) {
+                if(gid.params.get(i).gid!=null) tryRegister(gid.params.get(i).gid, gidManager);
+            }
+        }
     }
     /**
      * Create a generalized identifier
@@ -301,8 +323,13 @@ class ExpressionEvaluator extends MinispecBaseVisitor<Object>{
     }
     
     @Override public Object visitIntLiteral(IntLiteralContext ctx) {
-        if(Utility.isMinispecUnsizedLiteral(ctx.getText()))
-            return Utility.getValueMinispecIntLiteral(ctx.getText());
+        if(Utility.isMinispecUnsizedLiteral(ctx.getText())){
+            try {
+                return Utility.getValueMinispecIntLiteral(ctx.getText());
+            } catch(NumberFormatException e) {
+                return ctx.getText()+"/*The number literal is too large to be preocessed*/";
+            }
+        }
         return ctx.getText();
     }
     

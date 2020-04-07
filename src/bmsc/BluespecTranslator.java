@@ -108,6 +108,8 @@ public class BluespecTranslator {
                 else if (toSynth instanceof Func) code=translator.translateFunc((Func)toSynth);
                 else continue;
                 System.out.println(code);
+                if(translator.dependentSubModules.size()>0)
+                System.out.println("Dependent Sub modules: "+ translator.dependentSubModules);
         }
         
     }

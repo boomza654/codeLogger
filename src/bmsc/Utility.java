@@ -77,6 +77,7 @@ public class Utility {
      * @return
      */
     public static String addPrefix(String src, String prefix) {
+       if(src.isEmpty()) return "";
        String out= Arrays.stream( src.split("\\n")).map((s)->prefix+s+"\n").reduce("",(a,b)->a+b);
        return out;
     }
@@ -89,5 +90,9 @@ public class Utility {
         if(input instanceof Boolean)
             return ((Boolean)input)?"True":"False";
         return input.toString();
+    }
+    
+    public static void main(String[] args) {
+        System.out.println(getValueMinispecIntLiteral("'h70000000"));
     }
 }

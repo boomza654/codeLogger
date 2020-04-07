@@ -39,10 +39,12 @@ public class Translator  extends MinispecBaseVisitor<String>{
     public static String INDENT = "    ";
     public static Set<String> DISPLAY_FUNCS = Set.of("$display","$write","$displayb","$displayo","$displayh","$writeb","$writeo","$writeh");
     public final GeneralizedIdentifierManager gidManager;
-    public final HashMap<String,Object> resultMap;// to put in other results other than code into there  ( like reporting result)
+    //public final HashMap<String,Object> resultMap;// to put in other results other than code into there  ( like reporting result)
+    public final List<GeneralizedIdentifier> dependentSubModules; // to report dependent Submodules result from parsing them odule
     public Translator(GeneralizedIdentifierManager gidManager) {
         this.gidManager=gidManager;
-        this.resultMap=new HashMap<>();
+        //this.resultMap=new HashMap<>();
+        this.dependentSubModules=new ArrayList<>();
     }
     
     @Override public String visitTypeDefEnumElement(TypeDefEnumElementContext ctx) {
@@ -79,7 +81,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
                 if(octx.binopExpr().unopExpr()!=null && octx.binopExpr().unopExpr().exprPrimary()!=null && octx.binopExpr().unopExpr().exprPrimary() instanceof CallExprContext) {
                     CallExprContext cctx = (CallExprContext)octx.binopExpr().unopExpr().exprPrimary();
                     if(DISPLAY_FUNCS.contains(cctx.exprPrimary().getText())) {
-                        return "0;// substitute display func \n";
+                        return "";
                     }
                 }
             } 
@@ -120,7 +122,10 @@ public class Translator  extends MinispecBaseVisitor<String>{
         List<String> varInitString = new ArrayList<>();
         for(VarInitContext victx:ctx.varInit()) {
             Variable var = new Variable(typeId,victx.var.getText());
-            var.value= ExpressionEvaluator.evaluate(victx.expression(), gidManager); 
+            if(victx.expression()!=null)
+                var.value= ExpressionEvaluator.evaluate(victx.expression(), gidManager); 
+            else
+                var.value="?";
             // no new function / type will be instatiate since there is no parametric registered yet
             if(ctx.type().getText().equals("Integer"))
                 assert var.value instanceof Integer: "THe evaluated value of "+var.name+" is not compile-time Integer";
@@ -131,7 +136,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
             varInitString.add(var.name+"="+var.value);
         }
         out+=String.join(", ", varInitString)+";\n";
-        String integerDecl = "0;// substitute Integer decl \n";
+        String integerDecl = "";
         return ctx.type().getText().equals("Integer")?integerDecl:out;
     }
     
@@ -144,7 +149,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
             Variable var = new Variable(SemanticElement.INTEGER_TYPE.typeId,varName);
             var.value=value;
             gidManager.defineVar(varName, var);
-            return "0;// substitute Integer decl \\n";
+            return "";
         } else { // normal let
             List<String> varNames = ctx.lowerCaseIdentifier().stream().map((e)->e.getText()).collect(Collectors.toList());
             for(String varName:varNames) {
@@ -176,7 +181,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
                     Object assignedValue= ExpressionEvaluator.evaluate(ctx.expression(), gidManager);
                     assert assignedValue instanceof Integer : "Error cannot convert Expression "+ ctx.expression().getText()+" to int value";
                     gidManager.setVar(varName, assignedValue);
-                    return "0;// substitute Integer assignemnt \n";
+                    return "";
                 }
             } else if (ctx.var instanceof MemberLvalueContext) {
                 MemberLvalueContext mctx = (MemberLvalueContext)ctx.var;
@@ -207,6 +212,8 @@ public class Translator  extends MinispecBaseVisitor<String>{
                 if (var.isModule) {
                     // submodule ocmmunication here
                     assert !(hasSlice || hasMember || gidManager.isInMethod()) : "Err wrong submodule assignment syntax" ;
+
+                    assert !gidManager.isInMethod(): "Error: perform submodule write inside method"; 
                     String out = visit(mctx.lvalue())
                             +"."
                             +inputNameToActionName(mctx.lowerCaseIdentifier().getText())
@@ -233,6 +240,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
         return visit(ctx.lvalue())+"["+ExpressionEvaluator.evaluate(ctx.msb, gidManager)+":"+ExpressionEvaluator.evaluate(ctx.lsb, gidManager)+"]";
     }
     @Override public String visitRegWrite(RegWriteContext ctx) {
+        assert !gidManager.isInMethod(): "Error: perform register write inside method"; 
         return visit(ctx.lvalue())+" <= "+ ExpressionEvaluator.evaluate(ctx.expression(), gidManager)+";\n";
     }
     
@@ -248,7 +256,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
                 gidManager.enterMutableScope();
                 code =visit(sctx);
                 gidManager.exitScope();
-                if(sctx.beginEndBlock()!=null) {
+                if(sctx.beginEndBlock()==null) {
                     // encapsulate single statment in a begin end block
                     code=Utility.addPrefix(code, INDENT);
                     code= "begin\n"+code+"end\n";
@@ -258,13 +266,13 @@ public class Translator  extends MinispecBaseVisitor<String>{
                 gidManager.enterMutableScope();
                 code =visit(sctx);
                 gidManager.exitScope();
-                if(sctx.beginEndBlock()!=null) {
+                if(sctx.beginEndBlock()==null) {
                     // encapsulate single statment in a begin end block
                     code=Utility.addPrefix(code, INDENT);
                     code= "begin\n"+code+"end\n";
                 }
             } else {
-                code= "0;// non-taken if with not else\n";
+                code= "";
             }            
             return code;
         } else {
@@ -273,7 +281,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
             if(ctx.stmt().get(0).beginEndBlock()!=null) {
                 out+=visit(ctx.stmt().get(0).beginEndBlock());
             } else {
-                out+="\n"+Utility.addPrefix(visit(ctx.stmt().get(0)), INDENT);
+                out+=" begin\n"+Utility.addPrefix(visit(ctx.stmt().get(0)), INDENT)+"end\n";
             }
             gidManager.exitScope();
             boolean hasElse = ctx.stmt().size()==2;
@@ -283,7 +291,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
                 if(ctx.stmt().get(1).beginEndBlock()!=null) {
                     out+=visit(ctx.stmt().get(1).beginEndBlock());
                 } else {
-                    out+="\n"+Utility.addPrefix(visit(ctx.stmt().get(1)), INDENT);
+                    out+=" begin\n"+Utility.addPrefix(visit(ctx.stmt().get(1)), INDENT)+"end\n";
                 }
                 gidManager.exitScope();
             }
@@ -316,7 +324,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
                 else
                     code= "begin\n"+Utility.addPrefix(visit(ctx.caseStmtDefaultItem().stmt()), INDENT)+"end\n";
             gidManager.exitScope();
-            if(code==null) code="0;/*Nothing get chosen case Stmt*/\n";
+            if(code==null) code="";
             return code;
         }
         else {
@@ -331,7 +339,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
                if(ictx.stmt().beginEndBlock()!=null)
                    item+=(visit(ictx.stmt()));
                else
-                   item+="\n"+Utility.addPrefix(visit(ictx.stmt()),INDENT);
+                   item+="begin \n"+Utility.addPrefix(visit(ictx.stmt()),INDENT)+"end\n";
                out+=Utility.addPrefix(item, INDENT);
                gidManager.exitScope();
             }
@@ -342,7 +350,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
                 if(ctx.caseStmtDefaultItem().stmt().beginEndBlock()!=null)
                     item+=(visit(ctx.caseStmtDefaultItem().stmt()));
                 else
-                    item+="\n"+Utility.addPrefix(visit(ctx.caseStmtDefaultItem().stmt()),INDENT);
+                    item+="begin \n"+Utility.addPrefix(visit(ctx.caseStmtDefaultItem().stmt()),INDENT)+"end\n";
 
                 out+=Utility.addPrefix(item, INDENT);
             }
@@ -372,7 +380,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
             BBoolean bpredicate = (BBoolean)predicate;
             if(!bpredicate.value) break;
             // then continue synthesizing
-            System.out.println("Elaborate For loop: "+varName+" = "+loopVar.value);
+            //System.out.println("Elaborate For loop: "+varName+" = "+loopVar.value);
             if(ctx.stmt().beginEndBlock()!=null) {
                 code+=visit(ctx.stmt());
             }else {
@@ -406,7 +414,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
         if(gidManager.getType(gid)==null) {throw new RuntimeException("Error: No Type/Module name "+ gid); }
         if(gidManager.getType(gid).definition==null) {throw new RuntimeException("Error: Type/Module "+gid+" has no definition"); }
         if(!(gidManager.getType(gid).definition instanceof ParserRuleContext)) {throw new RuntimeException("Error: Type/Module "+gid+" has typedef"); }
-        resultMap.clear(); // clear result out 
+        dependentSubModules.clear(); // clear result out 
         System.out.println("Start Translating Type: "+ gid);
         
         ParserRuleContext toTranslate=(ParserRuleContext)gidManager.getType(gid).definition; // you should not translate type of Minispec static synonym at all
@@ -435,7 +443,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
         if(gidManager.getFunc(gid)==null) {throw new RuntimeException("Error: No function name "+ gid); }
         if(gidManager.getFunc(gid).definition==null) {throw new RuntimeException("Error: function "+gid+" has no definition"); }
         if(!(gidManager.getFunc(gid).definition instanceof FunctionDefContext)) {throw new RuntimeException("Error: function "+gid+" has no body?!?"); }
-        resultMap.clear(); // clear result out 
+        dependentSubModules.clear(); // clear result out 
         System.out.println("Start Translating Function: "+ gid);
         
         FunctionDefContext ctx=(FunctionDefContext)gidManager.getFunc(gid).definition; // you should not translate type of Minispec static synonym at all
@@ -487,6 +495,8 @@ public class Translator  extends MinispecBaseVisitor<String>{
      * @return code for the begin end
      */
     public String translateBeginEndBlock(BeginEndBlockContext ctx) {
+
+        dependentSubModules.clear(); // clear result out 
         return visit(ctx);
     }
     /**
@@ -503,8 +513,9 @@ public class Translator  extends MinispecBaseVisitor<String>{
      * @return the code of declaration of that var (in the outermost scope)
      */
     public String translateVar(Variable var) {
-
-         System.out.println("Start Translating Outermost Variable: "+ var.name);
+         dependentSubModules.clear(); // clear result out 
+         System.out.println("Start Translating Outermost Variable Declaration: "+ var.name);
+         GidExtracter.tryRegister(var.typeId, gidManager);
          return var.typeId.toProperTypeString(gidManager)+" "+var.name+"="+var.value+";\n";
     }
     /**
@@ -522,7 +533,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
      * @return string for transaltion
      */
     public String translateTypeDefStruct(GeneralizedIdentifier gid,TypeDefStructContext ctx) {
-        resultMap.clear(); // clear result out 
+        dependentSubModules.clear(); // clear result out 
         List<ParamFormalContext> paramFormalNodes = ctx.typeId().paramFormals()!=null?ctx.typeId().paramFormals().paramFormal():List.of();
         boolean isParametric = GidExtracter.isParametric(paramFormalNodes);
         // if the definition is parametric but the gid is concrete
@@ -545,7 +556,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
      * @return string for transaltion
      */
     public String translateTypeDefSynonym(GeneralizedIdentifier gid,TypeDefSynonymContext ctx) {
-        resultMap.clear(); // clear result out 
+        dependentSubModules.clear(); // clear result out 
         List<ParamFormalContext> paramFormalNodes = ctx.typeId().paramFormals()!=null?ctx.typeId().paramFormals().paramFormal():List.of();
         boolean isParametric = GidExtracter.isParametric(paramFormalNodes);
         // if the definition is parametric but the gid is concrete
@@ -566,7 +577,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
      * @return string for transaltion
      */
     public String translateModuleDef(GeneralizedIdentifier gid,ModuleDefContext ctx) {
-        resultMap.clear(); // clear result out 
+        dependentSubModules.clear(); // clear result out 
         List<ParamFormalContext> paramFormalNodes = ctx.moduleId().paramFormals()!=null?ctx.moduleId().paramFormals().paramFormal():List.of();
         boolean isParametric = GidExtracter.isParametric(paramFormalNodes);
         // if the definition is parametric but the gid is concrete
@@ -575,22 +586,109 @@ public class Translator  extends MinispecBaseVisitor<String>{
         if(isParametric) {
             matchParameter(gid.params,paramFormalNodes);
         }
-        // Real synthesis
         String properInterfaceName = gid.toStringEscapeParametric();
         String interfaceCode = "interface "+properInterfaceName+";\n";
-        List<Variable> inputVarList = new ArrayList<>();
-        // More on interface code later
         String out = "module "+ gid.toProperModuleString(gidManager);
         List<Variable> argList = extractArgFormalFunc(ctx.argFormals()!=null? ctx.argFormals().argFormal():List.of());
         argList.forEach((var)->{var.isModule=true;gidManager.defineVar(var.name, var);}); // tag that each of arguments mst be Value or module
-        //(so that when interact with them) we need change syntax
-        
 
         if(ctx.argFormals()!=null) out+="#"+visit(ctx.argFormals());
         out+="("+properInterfaceName+");\n";
+        /*
+         * Setting up part:
+         * First register all variable
+         * then
+         *  read all input /submodue / method/ VarDecl
+         *  - submodule -> register as submodule (We will report dependent Submodule +translate now)
+         *  - input -> convert to Action method and put inside interface + translate now
+         *  - method -> put inside interface + translate later
+         *  - VarDecl -> just declare + translate now
+         * */
+        
+        //(so that when interact with them) we need change syntax
+        for(ModuleStmtContext mctx: ctx.moduleStmt()) {
+            if(mctx.submoduleDecl()!=null) {
+                //register type
+                GeneralizedIdentifier typeId = GidExtracter.extractGidAndRegisterType(mctx.submoduleDecl().type(), gidManager);
+                String varName = mctx.submoduleDecl().name.getText();
+                Variable var = new Variable(typeId,varName);
+                var.isModule=true;
+                gidManager.defineVar(varName, var);
+                List<String> args = mctx.submoduleDecl().args()!=null?
+                        mctx.submoduleDecl().args().arg().stream().map((e)->
+                            (ExpressionEvaluator.evaluate(e.expression(), gidManager)).toString())
+                            .collect(Collectors.toList())
+                        :List.of();
+                String submoduleDecl=typeId.toProperTypeString(gidManager)+" "+varName+" <- "+typeId.toModuleInitializer(args, gidManager)+";\n";
+                this.dependentSubModules.add(typeId);
+                out+=Utility.addPrefix(submoduleDecl, INDENT);
+                
+            } else if(mctx.inputDef()!=null) {
+                String action="method Action ";
+                String wireName =mctx.inputDef().name.getText();
+                String actionName = inputNameToActionName(wireName);
+                GeneralizedIdentifier typeId = GidExtracter.extractGidAndRegisterType(mctx.inputDef().type(), gidManager);
+                String arg = "("+typeId.toProperTypeString(gidManager) +" value)";
+                interfaceCode+=INDENT+action+actionName+arg+";\n";
+                // will instead of visit node just translate it here since I'm too lazy to use gidExtractor withihn the node again
+                String wireDecl = "Wire#("+typeId.toProperTypeString(gidManager)+") "+ wireName +" <-"
+                        + (mctx.inputDef().defaultVal!=null? "mkDWire("+ExpressionEvaluator.evaluate(mctx.inputDef().defaultVal, gidManager)+")":"mkBypassWire")
+                        +";\n";
+                String methodDef = action+actionName+arg+";\n"+INDENT+wireName+"<= value;\nendmethod\n";
+                out+=Utility.addPrefix(wireDecl, INDENT)+Utility.addPrefix(methodDef, INDENT);
+                gidManager.defineVar(wireName, new Variable(typeId,wireName));
+                
+            } else if (mctx.methodDef()!=null) { 
+                GeneralizedIdentifier retTypeId = GidExtracter.extractGidAndRegisterType(mctx.methodDef().type(), gidManager);
+                String name = mctx.methodDef().name.getText();
+                String methodDef = "method "+retTypeId.toProperTypeString(gidManager)+" "+name+(mctx.methodDef().argFormals()!=null?visit(mctx.methodDef().argFormals()):"")+";";
+                interfaceCode+=INDENT+methodDef+"\n";
+            } else if (mctx.stmt()!=null) {
+                StmtContext sctx = mctx.stmt();
+                assert sctx.varDecl()!=null: "THe statement inside module must be variable declaration";
+                String varDeclCode=visit(sctx.varDecl()); // just to register variable first
+                out+=Utility.addPrefix(varDeclCode, INDENT); // and also add to module translated text by the way since we dont want to
+            }
+        }
+        // Then visit rules and elaborate methods
+        for(ModuleStmtContext mctx: ctx.moduleStmt()) {
+            if (mctx.methodDef()!=null) { 
+                GeneralizedIdentifier retTypeId = GidExtracter.extractGidAndRegisterType(mctx.methodDef().type(), gidManager);
+                String name = mctx.methodDef().name.getText();
+                String methodDefCode = "method "+retTypeId.toProperTypeString(gidManager)+" "+name+(mctx.methodDef().argFormals()!=null?visit(mctx.methodDef().argFormals()):"");
+                
+                List<Variable> methodArgList = extractArgFormalFunc(mctx.methodDef().argFormals()!=null?mctx.methodDef().argFormals().argFormal():List.of());
+                
+                gidManager.enterMethodScope();
+                methodArgList.forEach((v)->gidManager.defineVar(v.name, v)); // define Var accordingly
+                if(mctx.methodDef().expression()!=null) {
+                    methodDefCode +=" = "+ExpressionEvaluator.evaluate(mctx.methodDef().expression(),gidManager)+";\n";
+                } else {
+                    methodDefCode+= ";\n";
+                    String code="";
+                    for(StmtContext sctx:mctx.methodDef().stmt()) {
+                        //System.out.println(sctx.getText());
+                        code+=visit(sctx);
+                    }
+                    methodDefCode+=Utility.addPrefix(code, INDENT)+"endmethod\n";
+                }
+                gidManager.exitScope();
+                out+=Utility.addPrefix(methodDefCode,INDENT);
+            } else if (mctx.ruleDef()!=null) {
+                String ruleDef="(* no_implicit_conditions, fire_when_enabled *)\n";
+                gidManager.enterMutableScope();
+                ruleDef+="rule "+mctx.ruleDef().name.getText()+";\n";
+                for(StmtContext sctx: mctx.ruleDef().stmt())
+                    ruleDef+=Utility.addPrefix(visit(sctx), INDENT);
+                ruleDef+="endrule\n";
+                out+=Utility.addPrefix(ruleDef, INDENT);
+                gidManager.exitScope();
+            }
+        }
+        interfaceCode+="endinterface\n";
         out+="endmodule\n";
         gidManager.exitScope();
-        return out;
+        return interfaceCode+out;
     }
     /**
      * Will let gidManager define Var/ type according to the matched param=> paramformal

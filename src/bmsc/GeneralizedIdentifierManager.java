@@ -441,7 +441,7 @@ public class GeneralizedIdentifierManager {
     public static Scope immutableScope() {return new Scope(false, false, false);}
     public static Scope MutableContext() {return new Scope(true, false, false);}
     public static Scope MethodContext() {return new Scope(true, false, true);}
-    public static Scope FlowSensitiveContext() {return new Scope(true, true, true);}
+    public static Scope FlowSensitiveContext() {return new Scope(true, true, false);}
     
     public Scope(boolean isMutableFromChildren, boolean isFlowSensitive, boolean isMethod) {
         this.isMutableFromChildren=isMutableFromChildren;

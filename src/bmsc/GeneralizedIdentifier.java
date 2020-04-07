@@ -57,7 +57,7 @@ public class GeneralizedIdentifier {
      * @return
      */
     public String toProperTypeString(GeneralizedIdentifierManager gidManager) {
-        if(gidManager.getParametric(name) !=null) {
+        if(gidManager.getType(this) !=null || gidManager.getParametric(name) !=null) {
             return toStringEscapeParametric(); 
         } else {
             List<String> paramStrings= params.stream().map((s)->s.toProperTypeString(gidManager)).collect(Collectors.toList());
@@ -73,6 +73,28 @@ public class GeneralizedIdentifier {
      */
     public String toProperModuleString(GeneralizedIdentifierManager gidManager) {
         return "mk"+toProperTypeString(gidManager);
+    }
+    /**
+     * Convert current generalized identifier( should be type)  to a module initializer mkReg or something
+     * @param args list of argument to pass in
+     * @param gidManager
+     * @return the module initilizer code
+     */
+    public String toModuleInitializer(List<String> args, GeneralizedIdentifierManager gidManager) {
+        if(this.name.equals("Vector")) {
+            assert this.params.size()==2: "Vector must have only 2 parameter";
+            assert this.params.get(0).number!=null:"1st argument of vector must be number";
+            assert this.params.get(1).gid!=null:"2nd argument of Vector must be a type";
+            GeneralizedIdentifier inside = this.params.get(1).gid;
+            return "replicateM("+inside.toModuleInitializer(args, gidManager)+")";
+        } else if(gidManager.getType(this) !=null || gidManager.getParametric(name) !=null)  {
+            // minispec type
+            
+            return this.toProperModuleString(gidManager)+"("+String.join(", ", args)+")";
+        } else {
+            // Bluespec TYpe init only the outer most
+            return "mk"+this.name+"("+String.join(", ", args)+")";
+        }
     }
 }
 
