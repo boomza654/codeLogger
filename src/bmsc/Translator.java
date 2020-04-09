@@ -26,16 +26,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
  *
  */
 public class Translator  extends MinispecBaseVisitor<String>{
-    public static String MinispecPrelude = 
-            "/* Minispec prelude -- automatically prepended to every Minispec file */\n" + 
-            "import Vector::*;  // In Minispec, Vector is a basic type\n" + 
-            "\n" + 
-            "// Minispec doesn't separate module and interface names, so use typedefs to\n" + 
-            "// allow using some of the BSV Prelude modules with different interface names\n" + 
-            "typedef Reg#(t) RegU#(type t);\n" + 
-            "typedef Wire#(t) BypassWire#(type t);\n" + 
-            "typedef Wire#(t) DWire#(type t);\n" + 
-            "/* End of Minispec prelude */\n";
+
     public static String INDENT = "    ";
     public static Set<String> DISPLAY_FUNCS = Set.of("$display","$write","$displayb","$displayo","$displayh","$writeb","$writeo","$writeh");
     public final GeneralizedIdentifierManager gidManager;
@@ -48,7 +39,6 @@ public class Translator  extends MinispecBaseVisitor<String>{
     }
     
     @Override public String visitTypeDefEnumElement(TypeDefEnumElementContext ctx) {
-        gidManager.defineVar(ctx.upperCaseIdentifier().getText(), new Variable(ENUMVALUE, ctx.upperCaseIdentifier().getText()));
         return ctx.getText();
     }
     @Override public String visitTypeDefEnum(TypeDefEnumContext ctx) {
@@ -131,7 +121,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
                 assert var.value instanceof Integer: "THe evaluated value of "+var.name+" is not compile-time Integer";
             else
                 var.value=var.value.toString();
-            //System.out.println("Register Variable      "+typeId.toString()+" "+var.name+" = "+var.value);
+            //Utility.println("Register Variable      "+typeId.toString()+" "+var.name+" = "+var.value);
             gidManager.defineVar(var.name, var);
             varInitString.add(var.name+"="+var.value);
         }
@@ -380,7 +370,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
             BBoolean bpredicate = (BBoolean)predicate;
             if(!bpredicate.value) break;
             // then continue synthesizing
-            //System.out.println("Elaborate For loop: "+varName+" = "+loopVar.value);
+            //Utility.println("Elaborate For loop: "+varName+" = "+loopVar.value);
             if(ctx.stmt().beginEndBlock()!=null) {
                 code+=visit(ctx.stmt());
             }else {
@@ -415,7 +405,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
         if(gidManager.getType(gid).definition==null) {throw new RuntimeException("Error: Type/Module "+gid+" has no definition"); }
         if(!(gidManager.getType(gid).definition instanceof ParserRuleContext)) {throw new RuntimeException("Error: Type/Module "+gid+" has typedef"); }
         dependentSubModules.clear(); // clear result out 
-        System.out.println("Start Translating Type: "+ gid);
+        Utility.println("Start Translating Type: "+ gid);
         
         ParserRuleContext toTranslate=(ParserRuleContext)gidManager.getType(gid).definition; // you should not translate type of Minispec static synonym at all
         if(toTranslate instanceof TypeDefStructContext) {
@@ -444,7 +434,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
         if(gidManager.getFunc(gid).definition==null) {throw new RuntimeException("Error: function "+gid+" has no definition"); }
         if(!(gidManager.getFunc(gid).definition instanceof FunctionDefContext)) {throw new RuntimeException("Error: function "+gid+" has no body?!?"); }
         dependentSubModules.clear(); // clear result out 
-        System.out.println("Start Translating Function: "+ gid);
+        Utility.println("Start Translating Function: "+ gid);
         
         FunctionDefContext ctx=(FunctionDefContext)gidManager.getFunc(gid).definition; // you should not translate type of Minispec static synonym at all
         List<ParamFormalContext> paramFormalNodes = ctx.functionId().paramFormals()!=null?ctx.functionId().paramFormals().paramFormal():List.of();
@@ -514,8 +504,8 @@ public class Translator  extends MinispecBaseVisitor<String>{
      */
     public String translateVar(Variable var) {
          dependentSubModules.clear(); // clear result out 
-         System.out.println("Start Translating Outermost Variable Declaration: "+ var.name);
-         GidExtracter.tryRegister(var.typeId, gidManager);
+         Utility.println("Start Translating Outermost Variable Declaration: "+ var.name);
+         GidExtracter.tryRegisterType(var.typeId, gidManager);
          return var.typeId.toProperTypeString(gidManager)+" "+var.name+"="+var.value+";\n";
     }
     /**
@@ -525,6 +515,23 @@ public class Translator  extends MinispecBaseVisitor<String>{
      */
     public String translateFunc(Func func) {
         return translateFunc(func.funcId);
+    }
+    
+    /**
+     * Translate the bsv import into nromal bluespec import
+     * @param ctx
+     * @return the code of bluespec import
+     */
+    public String translateBSVImport(BsvImportDeclContext ctx) {
+
+        dependentSubModules.clear(); // clear result out 
+        String out="";
+
+        Utility.println("Start Translating BSV Imports ");
+        for(int j=0;j<ctx.upperCaseIdentifier().size();j++)
+            out+="import "+ctx.upperCaseIdentifier(j).getText()+"::*;\n";
+        return out;
+        
     }
     /**
      * try translate the STruct type def (take care of parameterization as well)
@@ -588,7 +595,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
         }
         String properInterfaceName = gid.toStringEscapeParametric();
         String interfaceCode = "interface "+properInterfaceName+";\n";
-        String out = "module "+ gid.toProperModuleString(gidManager);
+        String out = "(*synthesize*)\nmodule "+ gid.toProperModuleString(gidManager);
         List<Variable> argList = extractArgFormalFunc(ctx.argFormals()!=null? ctx.argFormals().argFormal():List.of());
         argList.forEach((var)->{var.isModule=true;gidManager.defineVar(var.name, var);}); // tag that each of arguments mst be Value or module
 
@@ -667,7 +674,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
                     methodDefCode+= ";\n";
                     String code="";
                     for(StmtContext sctx:mctx.methodDef().stmt()) {
-                        //System.out.println(sctx.getText());
+                        //Utility.println(sctx.getText());
                         code+=visit(sctx);
                     }
                     methodDefCode+=Utility.addPrefix(code, INDENT)+"endmethod\n";
@@ -713,14 +720,14 @@ public class Translator  extends MinispecBaseVisitor<String>{
                 Integer value = p.number;
                 Variable var = SemanticElement.IntegerVar(varName);
                 var.value=value;
-                System.out.println("Match parametric "+varName+"="+var.value);
+                Utility.println("Match parametric "+varName+"="+var.value);
                 gidManager.defineVar(varName,var);
             } else {
                 //type
                 GeneralizedIdentifier typeGid = identifier(pf.upperCaseIdentifier().getText());
                 Type type = new Type(typeGid,p.gid);
 
-                System.out.println("Match parametric "+typeGid+"="+p.gid);
+                Utility.println("Match parametric "+typeGid+"="+p.gid);
                 gidManager.defineType(typeGid, type); // Static elaboration Type def are definied using Tyep instead of using parse tree
             }
         }

@@ -92,7 +92,7 @@ class Variable implements SemanticElement{
     }
     @Override 
     public String toString() {
-        return "<Var "+typeId.toString()+" "+name+" = "+value.toString()+" >";
+        return "<Var "+typeId.toString()+" "+name+" = "+(value!=null?value.toString():"null")+" >";
     }
 
     // no override of equals/ hashCode since the varaible need absolute equality

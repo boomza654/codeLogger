@@ -217,9 +217,9 @@ public class GeneralizedIdentifierManager {
      * @return true if definition is successful false otherwise 
      */
     public boolean defineVar(String varName, Variable e) {
-        if(getVar(varName)!=null) System.out.println("Warning: "+ varName + " Getting shadowed redefined as "+e);
+        if(getVar(varName)!=null) Utility.println("Warning: "+ varName + " Getting shadowed redefined as "+e);
         Map<String,Variable> curGidMap = getCurrentVarMap();
-        if(curGidMap.containsKey(varName)) {System.out.println("Error the "+varName+" is already defined"); return false;}
+        if(curGidMap.containsKey(varName)) {Utility.println("Error the "+varName+" is already defined"); return false;}
         curGidMap.put(varName,e);
         if(scopeTree.curNode==scopeTree.root.children.get(0) && !UnsynthesizableTypes.contains(e.typeId)) {
             outSynthQueue.add(e);
@@ -301,7 +301,7 @@ public class GeneralizedIdentifierManager {
      * @return true if definition is successful false otherwise 
      */
     public boolean defineFunc(GeneralizedIdentifier funcGid, Func e) {
-        if(funcMap.containsKey(funcGid)) {System.out.println("Error the "+funcGid+" is already defined"); return false;}
+        if(funcMap.containsKey(funcGid)) {Utility.println("Error the "+funcGid+" is already defined"); return false;}
         funcMap.put(funcGid,e);
         outSynthQueue.add(e);
         return true;
@@ -319,7 +319,7 @@ public class GeneralizedIdentifierManager {
      */
     public boolean defineType(GeneralizedIdentifier typeGid, Type e) {
         if(getType(typeGid)!=null) {
-            System.out.println("Error: "+ typeGid + " is already defined can't redefined ");
+            Utility.println("Error: "+ typeGid + " is already defined can't redefined ");
             return false;
         }
         Map<GeneralizedIdentifier,Type> curGidMap = scopeTree.get().typeMap;
@@ -371,7 +371,7 @@ public class GeneralizedIdentifierManager {
      * @return true if definition is successful false otherwise 
      */
     public boolean defineParametric(String name, Parametric e) {
-        if(parametricMap.containsKey(name)) {System.out.println("Error the parametric "+name+" is already defined"); return false;}
+        if(parametricMap.containsKey(name)) {Utility.println("Error the parametric "+name+" is already defined"); return false;}
         parametricMap.put(name,e);
         return true;
     }

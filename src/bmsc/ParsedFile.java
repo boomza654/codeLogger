@@ -32,7 +32,7 @@ public class ParsedFile {
      * @throws IOException on error
      */
     private ParsedFile(String fileName, String path) throws IOException {
-        System.out.println("Parsing "+path+fileName);
+        Utility.println("Parsing "+path+fileName);
         this.parserResult= ParserResult.fromFileName(path+fileName);
         this.fileName=fileName;
         if(!path.endsWith("/")) path+="/";
@@ -91,7 +91,7 @@ public class ParsedFile {
             importedParsedFiles.put(importName, outAlreadyParsedFileMap.get(importName));
         }
         currentParsedFile.imports=importedParsedFiles;
-        //System.out.println("Finished Setting Import :"+ currentParsedFile.toString());
+        //Utility.println("Finished Setting Import :"+ currentParsedFile.toString());
         outAlreadyParsedFileMap.put(fileName.substring(0,fileName.length()-3),currentParsedFile);
         outTopoSortedParsedFiles.add(currentParsedFile);
         

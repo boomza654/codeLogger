@@ -17,7 +17,16 @@ import api.antlr4.*;
 public class ParserResult {
     private final List<Token> tokenList ;
     private final ParseTree parseTree;
-    
+    /**
+     * Mode of parser ( select which mode to parse)
+     * @author boomza654
+     *
+     */
+    private static enum ParserMode{
+        PACKAGE_DEF,
+        TYPE,
+        FUNC
+    };
     /**
      * Factory method to parse things from from String
      * 
@@ -28,7 +37,7 @@ public class ParserResult {
      */
     public static ParserResult fromString(String str) {
         CharStream charstream = CharStreams.fromString(str);
-        return new ParserResult(charstream);
+        return new ParserResult(charstream,ParserMode.PACKAGE_DEF);
     }
     /**
      * Factory method to parse things from file
@@ -41,13 +50,73 @@ public class ParserResult {
      */
     public static ParserResult fromFileName(String fileName) throws IOException {
         CharStream charstream = CharStreams.fromFileName(fileName);
-        return new ParserResult(charstream);
+        return new ParserResult(charstream,ParserMode.PACKAGE_DEF);
     }
-    private ParserResult(CharStream charstream) {
+    /**
+     * Factory method to parse  typename from String
+     * 
+     * parseTree is not aliasing with token List anymore
+     * 
+     * @param str string to be parsed
+     * @returna a result of Parsing with initialized parseTree of type root
+     */
+    public static ParserResult moduleFromString(String str) {
+        CharStream charstream = CharStreams.fromString(str);
+        ParserResult out= new ParserResult(charstream,ParserMode.TYPE);
+        return out;
+    }
+    /**
+     * Factory method to parse function from String
+     * 
+     * parseTree is not aliasing with token List anymore
+     * 
+     * @param str string to be parsed
+     * @returna a result of Parsing with initialized parseTree of packageDef root
+     */
+    public static ParserResult funcFromString(String str) {
+        CharStream charstream = CharStreams.fromString(str);
+        ParserResult out=new ParserResult(charstream,ParserMode.FUNC);
+
+        return out;
+    }
+    
+    private ParserResult(CharStream charstream, ParserMode mode) {
         MinispecLexer lexer = new MinispecLexer(charstream);
         CommonTokenStream tokstream = new CommonTokenStream(lexer);
         MinispecParser parser = new MinispecParser(tokstream);
-        parseTree = parser.packageDef(); // parse here
+        parser.setErrorHandler(new BailErrorStrategy());
+        switch(mode) {
+            case PACKAGE_DEF: 
+                try {
+                    parseTree = parser.packageDef(); // parse here
+                } catch(Exception e) {
+                    throw new RuntimeException("can't parse Code");
+                }
+                break;
+            case TYPE:
+                try {
+                    parseTree = parser.type(); // parse here
+
+                }catch(Exception e) {
+                    throw new RuntimeException("can't parse module name");
+                }
+                if(! (parseTree instanceof MinispecParser.TypeContext) || parseTree.getText().charAt(0)<'A' || parseTree.getText().charAt(0)>'Z')
+                    throw new RuntimeException("can't parse module name");
+
+                break;
+            case FUNC:
+                try{
+                    parseTree = parser.exprPrimary();
+                } catch(Exception e) {
+                    throw new RuntimeException("can't parse function name");
+                }
+
+                if(! (parseTree instanceof MinispecParser.VarExprContext) || parseTree.getText().charAt(0)<'a' || parseTree.getText().charAt(0)>'z')
+                    throw new RuntimeException("can't parse function name");
+                break;
+            default:
+                throw new RuntimeException("Invalid mode to select");
+        }
         tokenList = new ArrayList<>(tokstream.getTokens()); // defensive copy
     }
     /**

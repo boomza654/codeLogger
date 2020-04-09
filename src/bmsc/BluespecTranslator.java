@@ -1,7 +1,13 @@
 package bmsc;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.*;
+
+import api.antlr4.MinispecParser;
+import parser.ParserResult;
+
+import static api.antlr4.MinispecParser.*;
 
 
 /**
@@ -10,7 +16,19 @@ import java.util.*;
  *
  */
 public class BluespecTranslator {
-   
+    public static String MinispecPrelude = 
+            "/* Minispec prelude -- automatically prepended to every Minispec file */\n" + 
+            "import Vector::*;  // In Minispec, Vector is a basic type\n" + 
+            "\n" + 
+            "// Minispec doesn't separate module and interface names, so use typedefs to\n" + 
+            "// allow using some of the BSV Prelude modules with different interface names\n" + 
+            "typedef Reg#(t) RegU#(type t);\n" + 
+            "typedef Wire#(t) BypassWire#(type t);\n" + 
+            "typedef Wire#(t) DWire#(type t);\n" + 
+            "/* End of Minispec prelude */\n"+
+            "\n"+
+            "// The following code is trs=anslated using bmsc, Boomza654's version of msc that support\n"+
+            "// Allowing better synthesization of module";
     public static void showHelp() {
         final String helpMessage = "usage: [option] input_filename topmodule \n\n" + 
                 "Result : Will translate top_module of file_name in ms into synthesizable bsv \n\n"+
@@ -25,6 +43,90 @@ public class BluespecTranslator {
         final String errorMessage = "Type -h,--help option to gain more info";
         System.out.println(errorMessage);
         return;
+    }
+    /**
+     * The core of trasnaltion
+     * @param path
+     * @param inFileName
+     * @param moduleName
+     */
+    public static void translate(String path, String inFileName,String moduleName) {
+
+        String fullInFileName = path+inFileName;
+        String fullOutFileName= path+"out.bsv";
+        // Parse all file and its dependency
+        List<ParsedFile> parsedFiles = null;
+        ParserResult topLevelModule=null;
+        ParserResult topLevelFunc=null;
+        try {
+            parsedFiles= (ParsedFile.parseAndSortAllFilesStartingAt(inFileName, path));
+            try {
+                topLevelModule=ParserResult.moduleFromString(moduleName);
+                System.out.println("Top level module :"+topLevelModule.parseTree().getText());
+            } catch(Exception e) {
+                topLevelModule=null;
+            }
+            try {
+                topLevelFunc=ParserResult.funcFromString(moduleName);
+                System.out.println("Top level function :"+topLevelFunc.parseTree().getText());
+            } catch(Exception e) {
+                topLevelFunc=null;
+            }
+            assert topLevelModule==null || topLevelFunc==null : "Error parsing module / function name";
+            
+        } catch( IOException e){
+            throw new RuntimeException(e);
+        }
+        // Register all identifiers into the manager
+
+        List<Object> synthQueue= new LinkedList<Object>();
+        GeneralizedIdentifierManager gidManager = new GeneralizedIdentifierManager(synthQueue);
+        // get all bsv import first
+        for(ParsedFile parsedFile:parsedFiles) {
+            PackageDefContext p = (PackageDefContext)parsedFile.parserResult.parseTree(); 
+            for(PackageStmtContext ps: p.packageStmt()) {
+                if(ps.bsvImportDecl()!=null) synthQueue.add(ps.bsvImportDecl());
+            }
+        }
+        for(ParsedFile parsedFile:parsedFiles) {
+            Utility.println("Start Registering Variables/Types/Functions/Parametrics in file: "+ parsedFile.fileName);
+            Elaborater.firstPassGidRegister(parsedFile, gidManager);
+        }
+        // register our current module / func
+        if(topLevelModule!=null) {
+            GidExtracter.extractGidAndRegisterType((MinispecParser.TypeContext)topLevelModule.parseTree(), gidManager);
+        }
+        if(topLevelFunc!=null) {
+            GidExtracter.extractGidAndRegisterFunc((MinispecParser.VarExprContext)topLevelFunc.parseTree(), gidManager);
+        }
+        Utility.println("Finish Registering Variables/Types/functions/Parametrics");
+        Utility.println(gidManager);
+        Utility.println("SynthQueue:");
+        for(Object e: synthQueue)
+            Utility.println("\t"+e);
+        Translator translator = new Translator(gidManager);
+        
+        // OPen file for writing
+        try ( PrintWriter p=new PrintWriter(fullOutFileName);) {
+            p.println(MinispecPrelude);
+            for(int i=0;i<synthQueue.size();i++) { // get all outer most types
+                    Object toSynth = synthQueue.get(i);
+                    String code="";
+                    if(toSynth instanceof Type) code=translator.translateType((Type)toSynth);
+                    else if (toSynth instanceof Variable) code=translator.translateVar((Variable)toSynth);
+                    else if (toSynth instanceof Func) code=translator.translateFunc((Func)toSynth);
+                    else if (toSynth instanceof BsvImportDeclContext) {
+                        BsvImportDeclContext bsvimport = (BsvImportDeclContext)toSynth;
+                        code=translator.translateBSVImport(bsvimport);
+                    }
+                    else continue;
+                    p.println(code); // emit code
+            }
+        }catch(IOException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("Translation complete at :"+ fullOutFileName);
+        
     }
     /**
      * run this thing with given arg (perserve main for Testing)
@@ -77,48 +179,14 @@ public class BluespecTranslator {
             System.out.println("Unknown file format: non-ms");
             return;
         }
-        String fullInFileName = path+inFileName;
-        String fullOutFileName= path+"out.bsv";
-        // Parse all file and its dependency
-        List<ParsedFile> parsedFiles = null;
-        try {
-            parsedFiles= (ParsedFile.parseAndSortAllFilesStartingAt(inFileName, path));
-        } catch( IOException e){
-            throw new RuntimeException(e);
-        }
-        // Register all identifiers into the manager
-
-        List<Object> synthQueue= new LinkedList<Object>();
-        GeneralizedIdentifierManager gidManager = new GeneralizedIdentifierManager(synthQueue);
-        for(ParsedFile parsedFile:parsedFiles) {
-            System.out.println("Start Registering Variables/Types/Functions/Parametrics in file: "+ parsedFile.fileName);
-            Elaborater.firstPassGidRegister(parsedFile, gidManager);
-        }
-        System.out.println("Finish Registering Variables/Types/functions/Parametrics");
-        System.out.println(gidManager);
-        System.out.println("SynthQueue:");
-        for(Object e: synthQueue)
-            System.out.println("\t"+e);
-        Translator translator = new Translator(gidManager);
-        for(int i=0;i<synthQueue.size();i++) { // get all outer most types
-                Object toSynth = synthQueue.get(i);
-                String code="";
-                if(toSynth instanceof Type) code=translator.translateType((Type)toSynth);
-                else if (toSynth instanceof Variable) code=translator.translateVar((Variable)toSynth);
-                else if (toSynth instanceof Func) code=translator.translateFunc((Func)toSynth);
-                else continue;
-                System.out.println(code);
-                if(translator.dependentSubModules.size()>0)
-                System.out.println("Dependent Sub modules: "+ translator.dependentSubModules);
-        }
-        
+        translate(path, inFileName, moduleName);
     }
     /**
      * Run the program with given arg
      * @param args the givne args
      */
     public static void main(String[] args) {
-        final String[] debugArgs=new String[] {"-p","input_dir/part3","Processor.ms", "MultipliersDebug.ms"};
-        run(debugArgs);
+        final String[] debugArgs=new String[] {"-p","D:\\work\\KingScholar\\MIT\\6.004 fa19\\lab6\\lab6","Processor.ms", "add"};
+        run(args);
     }
 }

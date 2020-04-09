@@ -91,7 +91,14 @@ public class Utility {
             return ((Boolean)input)?"True":"False";
         return input.toString();
     }
-    
+    /**
+     * Helper method for debug printing
+     * So that turning of debug will be easy
+     * @param s
+     */
+    public static void println(Object s) {
+        //System.out.println(s.toString());
+    }
     public static void main(String[] args) {
         System.out.println(getValueMinispecIntLiteral("'h70000000"));
     }
