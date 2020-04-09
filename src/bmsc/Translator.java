@@ -271,17 +271,17 @@ public class Translator  extends MinispecBaseVisitor<String>{
             if(ctx.stmt().get(0).beginEndBlock()!=null) {
                 out+=visit(ctx.stmt().get(0).beginEndBlock());
             } else {
-                out+=" begin\n"+Utility.addPrefix(visit(ctx.stmt().get(0)), INDENT)+"end\n";
+                out+="begin\n"+Utility.addPrefix(visit(ctx.stmt().get(0)), INDENT)+"end\n";
             }
             gidManager.exitScope();
             boolean hasElse = ctx.stmt().size()==2;
             if(hasElse) {
-                out+=" else ";
+                out+="else ";
                 gidManager.enterBranchScope();
                 if(ctx.stmt().get(1).beginEndBlock()!=null) {
                     out+=visit(ctx.stmt().get(1).beginEndBlock());
                 } else {
-                    out+=" begin\n"+Utility.addPrefix(visit(ctx.stmt().get(1)), INDENT)+"end\n";
+                    out+="begin\n"+Utility.addPrefix(visit(ctx.stmt().get(1)), INDENT)+"end\n";
                 }
                 gidManager.exitScope();
             }

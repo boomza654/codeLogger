@@ -30,7 +30,7 @@ public class BluespecTranslator {
             "// The following code is trs=anslated using bmsc, Boomza654's version of msc that support\n"+
             "// Allowing better synthesization of module";
     public static void showHelp() {
-        final String helpMessage = "usage: [option] input_filename topmodule \n\n" + 
+        final String helpMessage = "usage: [option] input_filename [topmodule, topfunction] \n\n" + 
                 "Result : Will translate top_module of file_name in ms into synthesizable bsv \n\n"+
                 "  -h,--help                               Print help message\n" + 
                 "  -p,--path  <directory_path>             Set default path of compilation\n"+
@@ -135,12 +135,9 @@ public class BluespecTranslator {
     public static void run(String[] args) {
         System.out.println("Input argument : "+Arrays.toString(args));
         String path="";
-        String moduleName="";
-        String inFileName="";
-        if(args.length<2) {
-            showError();
-            return;
-        }
+        String moduleName=null;
+        String inFileName=null;
+
         for(int i=0;i<args.length;i++) {
             if(args[i].equals("-h") || args[i].equals("--help")) {
                 showHelp();
@@ -174,7 +171,14 @@ public class BluespecTranslator {
                 }
             }
         }
-        
+        if(inFileName==null) {
+            System.out.println("No given input file");
+            return;
+        }
+        if(moduleName==null) {
+            moduleName="";
+            System.out.println("Warning: No top level module /function is given");
+        }
         if(!inFileName.endsWith(".ms")) {
             System.out.println("Unknown file format: non-ms");
             return;
@@ -186,7 +190,7 @@ public class BluespecTranslator {
      * @param args the givne args
      */
     public static void main(String[] args) {
-        final String[] debugArgs=new String[] {"-p","D:\\work\\KingScholar\\MIT\\6.004 fa19\\lab6\\lab6","Processor.ms", "add"};
+        final String[] debugArgs=new String[] {"-p","D:\\work\\KingScholar\\MIT\\6.004 fa19\\minispec_debugger\\codeLogger\\input_dir\\part3","Processor.ms", "Processor"};
         run(args);
     }
 }
