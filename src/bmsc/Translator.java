@@ -516,6 +516,54 @@ public class Translator  extends MinispecBaseVisitor<String>{
     public String translateFunc(Func func) {
         return translateFunc(func.funcId);
     }
+    /**
+     * create a module for toplevel
+     * @param gid
+     * @return code ofr top level module representing that func
+     */
+    public String translateToToplevelFunc(GeneralizedIdentifier gid) {
+        assert gidManager.getFunc(gid)!=null && gidManager.getFunc(gid).definition instanceof FunctionDefContext: "Undefined function "+gid;
+        dependentSubModules.clear(); // clear result out 
+        Utility.println("Start creating toplevel Function: "+ gid);
+        FunctionDefContext ctx = (FunctionDefContext)(gidManager.getFunc(gid).definition);
+        List<ParamFormalContext> paramFormalNodes = ctx.functionId().paramFormals()!=null?ctx.functionId().paramFormals().paramFormal():List.of();
+        boolean isParametric = GidExtracter.isParametric(paramFormalNodes);
+        // if the definition is parametric but the gid is concrete
+        // It measn we are trying to synthesize gid Tyep by matching ctx parameter
+        if(isParametric) {
+            gidManager.enterImmutableScope();
+            matchParameter(gid.params,paramFormalNodes);
+        }
+        gidManager.enterMutableScope();
+        List<Variable> argVars = extractArgFormalFunc(ctx.argFormals()!=null? ctx.argFormals().argFormal(): List.of());
+        List<String> argVarString = new ArrayList<>();
+        List<String> argString = new ArrayList<>();
+        for(Variable var:argVars) {
+            gidManager.defineVar(var.name, var);
+            argVarString.add(var.typeId.toProperTypeString(gidManager)+" "+var.name);
+            argString.add(var.name);
+        }
+        
+       
+        String interfaceCode="interface TopLevel;\n";
+        interfaceCode+=Utility.addPrefix("method "+visit(ctx.type())+ " "+ gid.toStringEscapeParametric()+("("+String.join(", ", argVarString)+")")+";\n", INDENT);
+        interfaceCode+="endinterface\n";
+        String out = "(*synthesize*)\nmodule mkTopLevel(TopLevel);\n";
+        String methodDef="method "+visit(ctx.type())+ " "+gid.toStringEscapeParametric()+("("+String.join(", ", argVarString)+")")+" = ";
+        methodDef += gid.toStringEscapeParametric()+"("+ String.join(", ", argString)+");\n";
+        out+=Utility.addPrefix(methodDef, INDENT)+"endmodule\n";
+        gidManager.exitScope();
+        return interfaceCode+out;
+        
+    }
+    /**
+     * create a module for toplevel
+     * @param gid
+     * @return code ofr top level module representing that func
+     */
+    public String translateToToplevelFunc(Func func) {
+        return translateToToplevelFunc(func.funcId);
+    }
     
     /**
      * Translate the bsv import into nromal bluespec import
@@ -595,10 +643,11 @@ public class Translator  extends MinispecBaseVisitor<String>{
         }
         String properInterfaceName = gid.toStringEscapeParametric();
         String interfaceCode = "interface "+properInterfaceName+";\n";
-        String out = "(*synthesize*)\nmodule "+ gid.toProperModuleString(gidManager);
+        // WE can only syntheszie module without Module argument
+        String out = (ctx.argFormals()==null?"(*synthesize*)\n":"")+"module "+ gid.toProperModuleString(gidManager);
         List<Variable> argList = extractArgFormalFunc(ctx.argFormals()!=null? ctx.argFormals().argFormal():List.of());
         argList.forEach((var)->{var.isModule=true;gidManager.defineVar(var.name, var);}); // tag that each of arguments mst be Value or module
-
+        String moduleMethodCode="";
         if(ctx.argFormals()!=null) out+="#"+visit(ctx.argFormals());
         out+="("+properInterfaceName+");\n";
         /*
@@ -642,7 +691,8 @@ public class Translator  extends MinispecBaseVisitor<String>{
                         + (mctx.inputDef().defaultVal!=null? "mkDWire("+ExpressionEvaluator.evaluate(mctx.inputDef().defaultVal, gidManager)+")":"mkBypassWire")
                         +";\n";
                 String methodDef = action+actionName+arg+";\n"+INDENT+wireName+"<= value;\nendmethod\n";
-                out+=Utility.addPrefix(wireDecl, INDENT)+Utility.addPrefix(methodDef, INDENT);
+                out+=Utility.addPrefix(wireDecl, INDENT);
+                moduleMethodCode+=Utility.addPrefix(methodDef, INDENT); // to put method Code at the end of the block
                 gidManager.defineVar(wireName, new Variable(typeId,wireName));
                 
             } else if (mctx.methodDef()!=null) { 
@@ -680,7 +730,7 @@ public class Translator  extends MinispecBaseVisitor<String>{
                     methodDefCode+=Utility.addPrefix(code, INDENT)+"endmethod\n";
                 }
                 gidManager.exitScope();
-                out+=Utility.addPrefix(methodDefCode,INDENT);
+                moduleMethodCode+=Utility.addPrefix(methodDefCode,INDENT);
             } else if (mctx.ruleDef()!=null) {
                 String ruleDef="(* no_implicit_conditions, fire_when_enabled *)\n";
                 gidManager.enterMutableScope();
@@ -692,6 +742,8 @@ public class Translator  extends MinispecBaseVisitor<String>{
                 gidManager.exitScope();
             }
         }
+
+        out+=moduleMethodCode; // put method of wire input at the end
         interfaceCode+="endinterface\n";
         out+="endmodule\n";
         gidManager.exitScope();

@@ -10,6 +10,8 @@ import static api.antlr4.MinispecParser.*;
  *
  */
 public class Utility {
+    
+    public static boolean verbose=false;
     /**
      * 
      * With super slow + greedy algo replacement
@@ -97,7 +99,8 @@ public class Utility {
      * @param s
      */
     public static void println(Object s) {
-        //System.out.println(s.toString());
+        if(verbose)
+        System.out.println(s.toString());
     }
     public static void main(String[] args) {
         System.out.println(getValueMinispecIntLiteral("'h70000000"));

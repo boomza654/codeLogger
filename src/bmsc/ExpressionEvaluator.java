@@ -177,7 +177,7 @@ public class ExpressionEvaluator extends MinispecBaseVisitor<Object>{
                     matchCase=String.join(", ", matchCases);
                     item+=matchCase+": ";
                 }
-                item+=visit(ictx.expression())+";\n";
+                item+="("+visit(ictx.expression())+");\n";
                 out+=Utility.addPrefix(item, INDENT_STRING);
             }
             out+="endcase";
