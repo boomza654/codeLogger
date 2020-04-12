@@ -19,12 +19,12 @@ Collections of Minispec Add ons, especially Circuit visualizer
   - To effectively debug, need to run `ms` or `msc` to compile and run the simulation after translation
   - TODO: Create a real debugger from those output
   - TODO: Make a class that centralize Debug adding and real debugging
-## Verion
+## Version
 - 1.1 with Circuit Visualizer
 ## Dependency
 - `Java` ( Not quite sure which version it should be but the development was done using `Java(TM) SE Runtime Environment (build 11.0.4)`
 - `ANTLR v 4.7.2` as attached into the lib folder
-- 'json simple 1.1` as attached into the lib folder
+- `json simple 1.1` as attached into the lib folder
 - `Minispec` compiler from (https://github.mit.edu/6004/minispec) (For debugger)
 - `bsc` (Bluespec System Verilog Compiler). The same version that Minispec is using.
 - `yosys` 
