@@ -29,8 +29,30 @@ Collections of Minispec Add ons, especially Circuit visualizer
     2. `ms` / `msc` will run the instrumented source code and print out the debuggable information in the module
   - TODO: Create a real debugger from those output
   - TODO: Make a class that centralize Debug adding and real debugging
+## BMSC workflow ( for developers who want to modify code)
+Boomzaza's MiniSpec Compiler (BMSC) is bascially a modified Minispec compiler for using with `yosys` especially.
+
+Most of the workflow goes along the traditional `msc` compiler but with additional type checking and stuff. 
+
+All source files related to BMSC lives inside `src/bmsc` directory
+
+The general workflow of BMSC is according to the following list:
+1. Parse all files and create Parsed ordering (Import graph should be DAG: there should not be 2 sources files importing each other)
+  - The Details on Files parsing / ordering can be seen in `ParsedFile.java`
+2. Registering outer-most parametrics/Typedef/ModuleDef/FunctionDefs into `GeneralizedIdentifierManager` and into the synthesize queue
+  - The identifier with its parameter are called `GeneralizedIdentifier` (same identifier with different parameter are essentially referring to different things)
+  - The details of the first pass is in the `FirstPassGidRegister.java`
+  - Integer varaibles are also elaborated in in this pass using `ExpressionEvaluator.java`
+3. Each element in the synthesize queue are now translated into the output BSV file
+  - The details of translating to bsv is described in the `Translator.java`
+  - Integer varaible and Loops are elaborated as well
+  - New Reference to parametric module / function will add GeneralizedIdentifier to the synthesize queue
+
+`GeneralizedIdentifier` is a class that represents the identifier with parameters (with associated method for translation to BSV name). This is really essential to our translation process sincce traditionl `msc` still retains `#` sign in the identifier making `yosys` canot read the verilog module because # sign indicates verilog parameter not Minispec Parameter. In order to avoid that, we escape the using of # and detect which # corresponds Minispec Parameter and which corresponds to Bluespec Parameter.
 ## Version
+- 1.2 with Circuit Visualizer and `/*bmsc_pragma*/` to exclude modules/functions from diagram encapsulation
 - 1.1 with Circuit Visualizer
+- 1.0 with Debugger
 ## Dependency
 - `Java` ( Not quite sure which version it should be but the development was done using `Java(TM) SE Runtime Environment (build 11.0.4)`
 - `ANTLR v 4.7.2` as attached into the lib folder
