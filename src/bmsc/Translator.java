@@ -448,8 +448,8 @@ public class Translator  extends MinispecBaseVisitor<String>{
         gidManager.enterMutableScope();
         List<Variable> argVars = extractArgFormalFunc(ctx.argFormals()!=null? ctx.argFormals().argFormal(): List.of());
         
-        
-        String out = "(*noinline*)\n"
+        boolean toSynth = gidManager.getFunc(gid).toSynth;
+        String out = (toSynth?"(*noinline*)\n":"")
                 + "function "+ visit(ctx.type())+" "+ gid.toStringEscapeParametric()+"(";
         List<String> argVarString = new ArrayList<>();
         for(Variable var:argVars) {
@@ -553,6 +553,9 @@ public class Translator  extends MinispecBaseVisitor<String>{
         methodDef += gid.toStringEscapeParametric()+"("+ String.join(", ", argString)+");\n";
         out+=Utility.addPrefix(methodDef, INDENT)+"endmodule\n";
         gidManager.exitScope();
+        if(isParametric) {
+            gidManager.exitScope();
+        }
         return interfaceCode+out;
         
     }
@@ -643,8 +646,11 @@ public class Translator  extends MinispecBaseVisitor<String>{
         }
         String properInterfaceName = gid.toStringEscapeParametric();
         String interfaceCode = "interface "+properInterfaceName+";\n";
-        // WE can only syntheszie module without Module argument
-        String out = (ctx.argFormals()==null?"(*synthesize*)\n":"")+"module "+ gid.toProperModuleString(gidManager);
+        // WE can only syntheszie module without Module argument and no "nosynth tag is there
+
+        boolean toSynth = gidManager.getType(gid).toSynth; // 
+        
+        String out = ((ctx.argFormals()==null && toSynth )?"(*synthesize*)\n":"")+"module "+ gid.toProperModuleString(gidManager);
         List<Variable> argList = extractArgFormalFunc(ctx.argFormals()!=null? ctx.argFormals().argFormal():List.of());
         argList.forEach((var)->{var.isModule=true;gidManager.defineVar(var.name, var);}); // tag that each of arguments mst be Value or module
         String moduleMethodCode="";

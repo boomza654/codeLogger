@@ -49,7 +49,9 @@ public class GidExtracter{
             // REgister new Type
             Object definition = gidManager.getParametric(gid.name).definition;
             Utility.println("Define new Type "+ gid+" from parametric");
-            gidManager.defineTypeAtTop(gid, new Type(gid,definition));
+            Type newType =new Type(gid,definition);
+            newType.toSynth=gidManager.getParametric(gid.name).toSynth;
+            gidManager.defineTypeAtTop(gid, newType);
         }
         if(gidManager.getType(gid)==null && gidManager.getParametric(gid.name)==null) {
             //Utility.println(gid.name+" is Bluespec Type");
@@ -87,7 +89,9 @@ public class GidExtracter{
                 // call func#(4) but never declared func#(4)
                 // add new func
                 Utility.println("Define new Function "+gid+" from parametric");
-                gidManager.defineFunc(gid, new Func(gid,foundParametric.definition));
+                Func newFunc = new Func(gid,foundParametric.definition);
+                newFunc.toSynth=foundParametric.toSynth;
+                gidManager.defineFunc(gid, newFunc);
             }else {
                 // Error case: Paremetric call but nothing is found but let it slide cuz maybe some Bluespec thing is parametric
                 Utility.println("Warning "+gid+" has no defined function / parametric asssociated with it");

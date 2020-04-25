@@ -34,8 +34,9 @@ public class BluespecTranslator {
             "typedef Wire#(t) DWire#(type t);\n" + 
             "/* End of Minispec prelude */\n"+
             "\n"+
-            "// The following code is trs=anslated using bmsc, Boomza654's version of msc that support\n"+
-            "// Allowing better synthesization of module";
+            "// The following code is translated using bmsc, Boomza654's version of msc that support\n"+
+            "// better synthesization of module\n"+
+            "// Please Visit https://github.com/boomza654/codeLogger for github repo\n";
     public static void showHelp() {
         final String helpMessage = "usage: [option] input_filename [topmodule, topfunction] \n\n" + 
                 "Result : Will translate top_module of file_name in ms into synthesizable bsv \n\n"+
@@ -179,7 +180,6 @@ public class BluespecTranslator {
             Utility.println("Start Registering Variables/Types/Functions/Parametrics in file: "+ parsedFile.fileName);
             Elaborater.firstPassGidRegister(parsedFile, gidManager);
         }
-
         Translator translator = new Translator(gidManager);
         // register our current module / func
         if(topLevelModule!=null) {
@@ -213,7 +213,7 @@ public class BluespecTranslator {
                     else if (toSynth instanceof String) code= (String)toSynth;
                     else continue;
                     p.println(code); // emit code
-                    Utility.println(code);
+                    //Utility.println(code);
             }
         }catch(IOException e) {
             throw new RuntimeException(e);
@@ -282,7 +282,7 @@ public class BluespecTranslator {
         String outModuleName=translate(path, inFileName, moduleName); // write to out.bsv file
 
         runCmd(List.of("bash","-c", "cd "+ path+"; bsc -verilog -g "+outModuleName+" -u out.bsv"),true);
-        runCmd(List.of("bash","-c", "cd "+ path+"; yosys -p \"read_verilog *.v; proc; opt; wreduce; opt; wreduce; opt; wreduce; opt; write_json out.json\""),true);
+        runCmd(List.of("bash","-c", "cd "+ path+"; yosys -p \"read_verilog *.v; proc; opt; wreduce; opt; wreduce; opt; wreduce; opt; write_json out.json\""),false);
         stripJSON(path+"out.json", path+"out1.json", outModuleName);
         runCmd(List.of("bash","-c", "cd "+ path+"; netlistsvg out1.json"),true);
         System.out.println("Finish visualizing "+ outModuleName+"\nOutput files are at "+path+"out.svg");

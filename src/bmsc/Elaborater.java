@@ -24,7 +24,7 @@ public class Elaborater {
      * @param gidManager
      */
     public static void firstPassGidRegister(ParsedFile parsedFile, GeneralizedIdentifierManager gidManager) {
-        FirstPassGidRegister.firstPass((PackageDefContext)parsedFile.parserResult.parseTree(), gidManager);
+        FirstPassGidRegister.firstPass(parsedFile, gidManager);
     }
     /**
      * 

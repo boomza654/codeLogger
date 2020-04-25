@@ -34,7 +34,7 @@ public interface SemanticElement {
 class Type implements SemanticElement{
     public final GeneralizedIdentifier typeId;
     public Object definition; // most likely going to be the ParseTree node that define the whole thing
-    
+    public boolean toSynth=true; // this is for module Declaration  that it shoud synth by default
     public Type(GeneralizedIdentifier typeId, Object definition) {
         this.typeId=typeId;
         this.definition=definition;
@@ -45,7 +45,7 @@ class Type implements SemanticElement{
     }
     @Override 
     public String toString() {
-        return "<Type "+this.typeId.toString()+">";
+        return "<Type "+this.typeId.toString()+(toSynth?"":" no Synth")+">";
     }
     @Override
     public boolean equals(Object other) {
@@ -109,6 +109,7 @@ class Variable implements SemanticElement{
 class Func implements SemanticElement {
     public final GeneralizedIdentifier funcId;
     public Object definition;
+    public boolean toSynth=true; // this is for module Declaration  that it should no inline
     public Func( GeneralizedIdentifier funcId, Object definition) {
         this.funcId=funcId;
         this.definition=definition;
@@ -119,7 +120,7 @@ class Func implements SemanticElement {
     }
     @Override 
     public String toString() {
-        return "<Func "+funcId.toString()+">";
+        return "<Func "+funcId.toString()+(toSynth?"":" no Synth")+">";
     }
     @Override
     public boolean equals(Object other) {
@@ -142,7 +143,8 @@ class Func implements SemanticElement {
 class Parametric implements SemanticElement {
     public final String name;
     public Object definition;
-    
+    public boolean toSynth=true; // this is for module Declaration  that it shoud synth by default
+    // to synth has no effect if the type is actually type defs only
     public Parametric(String name, Object definition) {
         this.name =name;
         this.definition=definition;
@@ -153,7 +155,7 @@ class Parametric implements SemanticElement {
     }
     @Override 
     public String toString() {
-        return "<Parametric "+name.toString()+">";
+        return "<Parametric "+name.toString()+(toSynth?"":" no Synth")+">";
     }
     @Override
     public boolean equals(Object other) {
