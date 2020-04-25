@@ -13,6 +13,8 @@ Collections of Minispec Add ons, especially Circuit visualizer
   - argument `-p` can set path of the src file
   - followed by `<file_name> <module/function_name>`
   - This program is dependent on `bsc`,`yosys`,and `netlistsvg`
+  - add `/*bmsc_pragma:nosynth*/ into module definition / function definition in order to exapnd the module rendering 
+  - TODO: replace `netlistsvg` with a better Circuit visualization tool (Looking at Sukiyama algorithm)
 ### Debugger
   - Main usage is using java to run `translator.Translator` to add printf statement into minispec module
   - argument `<input file name> <output file name>`
