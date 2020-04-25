@@ -13,12 +13,20 @@ Collections of Minispec Add ons, especially Circuit visualizer
   - argument `-p` can set path of the src file
   - followed by `<file_name> <module/function_name>`
   - This program is dependent on `bsc`,`yosys`,and `netlistsvg`
-  - add `/*bmsc_pragma:nosynth*/ into module definition / function definition in order to exapnd the module rendering 
+  - The general flow of this Visualizer is 
+    1. `bmsc` translates the Minispec files into Bluespec files that are more ready for synthesis
+    2. `bsc` compiles bluespec source files to verilog modules
+    3. `yosys` imports all the verilog modules and synthesize circuits
+    4. `netlistsvg`  draw the circuit diagram out in svg file format
+  - add `/*bmsc_pragma:nosynth*/` into module definition / function definition in order to exapnd the module rendering 
   - TODO: replace `netlistsvg` with a better Circuit visualization tool (Looking at Sukiyama algorithm)
 ### Debugger
   - Main usage is using java to run `translator.Translator` to add printf statement into minispec module
   - argument `<input file name> <output file name>`
   - To effectively debug, need to run `ms` or `msc` to compile and run the simulation after translation
+  - The general flow of this debugger is
+    1. `translator` add display statement to the source code
+    2. `ms` / `msc` will run the instrumented source code and print out the debuggable information in the module
   - TODO: Create a real debugger from those output
   - TODO: Make a class that centralize Debug adding and real debugging
 ## Version
